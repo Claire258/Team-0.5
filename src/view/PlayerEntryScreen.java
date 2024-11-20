@@ -220,7 +220,7 @@ public class PlayerEntryScreen {
             }
         }
         JOptionPane.showMessageDialog(frame, "All players have been cleared!", "Info", JOptionPane.INFORMATION_MESSAGE);
-	    PhotonServerSocket.RemoveBaseHitter(); //reset toggle for base hitter to allow a new one
+	    //PhotonServerSocket.RemoveBaseHitter(); //reset toggle for base hitter to allow a new one
     }
 
 
@@ -380,7 +380,7 @@ public class PlayerEntryScreen {
         List<Player> greenTeamPlayers = new ArrayList<>();
         List<Player> redTeamPlayers = new ArrayList<>();
         Map<Integer, String> equipmentMap = new HashMap<>(); // Map to store equipment IDs
-//mark right here
+
         for (int i = 0; i < NUM_PLAYERS; i++) {
             if (!greenTeamFields[i][0].getText().isEmpty()) {
                 int id = Integer.parseInt(greenTeamFields[i][0].getText());
@@ -390,7 +390,6 @@ public class PlayerEntryScreen {
                 greenTeamPlayers.add(greenPlayer);
                 equipmentMap.put(id, equipmentId); // Add equipment ID to the map
                 playerManager.insertPlayer(greenPlayer);
-                PhotonServerSocket.assignCode(id); //send out hardware ID of player to activate
             }
             if (!redTeamFields[i][0].getText().isEmpty()) {
                 int id = Integer.parseInt(redTeamFields[i][0].getText());
@@ -400,9 +399,7 @@ public class PlayerEntryScreen {
                 redTeamPlayers.add(redPlayer);
                 equipmentMap.put(id, equipmentId); // Add equipment ID to the map
                 playerManager.insertPlayer(redPlayer);
-                PhotonServerSocket.assignCode(id); //send out hardware ID of player to activate
             }
-            
         }
         JDialog dialog = new JDialog(frame, "ERROR SUBMITTING PLAYERS", true);
 
@@ -410,7 +407,6 @@ public class PlayerEntryScreen {
             JOptionPane.showMessageDialog(dialog, "Players empty!", "Error", JOptionPane.ERROR_MESSAGE);
         } else {
             PlayActionScreen playActionScreen = new PlayActionScreen(greenTeamPlayers, redTeamPlayers, equipmentMap);
-            PhotonServerSocket.assignPlayActionScreen(playActionScreen);
             playActionScreen.display();
         }
     }
