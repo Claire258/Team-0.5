@@ -52,10 +52,10 @@ public class PlayActionScreen {
 
 		this.playerScores = new HashMap<>();
 		for (Player player : greenTeamPlayers) {
-			playerScores.put(player.getId(), 100);
+			playerScores.put(player.getId(), 0);
 		}
 		for (Player player : redTeamPlayers) {
-			playerScores.put(player.getId(), 100);
+			playerScores.put(player.getId(), 0);
 		}
 	}
 
@@ -165,9 +165,9 @@ public class PlayActionScreen {
 
 		for (Player player : players) {
 			JLabel playerLabel = new JLabel(
-					"ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: 100");
+					"ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: 0");
 			playerLabel.setForeground(LIGHT_TEXT);
-			playerLabel.setFont(new Font("Arial", Font.PLAIN, 18));
+			playerLabel.setFont(new Font("Arial", Font.PLAIN, 12));
 			playerListPanel.add(playerLabel);
 		}
 
@@ -209,20 +209,41 @@ public class PlayActionScreen {
 			musicClip.close();
 		}
 	}
+	private void startGameTimer()
+	{
+		Timer gameTimer = new Timer(1000, e-> {
+			if(this.gameTimer > 0){
+				this.gameTimer--;
+				countdownTimer.setText("Time remaining: " + (this.gameTimer / 60) + " minutes " + (this.gameTimer % 60) + " seconds");
+			}
+			else {
+				((Timer) e.getSource()).stop();
+				countdownTimer.setText("Game over!");
+				System.out.println("Game ending");
+				endGame();
+			}
+		});
+		gameTimer.start();
+	}
 
 	private void startCountdownTimer() {
 		timer = new Timer(1000, e -> {
 			timeRemaining--;
 			countdownTimer.setText("Countdown to laser mayhem: " + timeRemaining);
-			countdownTimer.setHorizontalAlignment(SwingConstants.CENTER);
+			//countdownTimer.setHorizontalAlignment(SwingConstants.CENTER);
 
 			if (timeRemaining == 15) {
 				playMusic();
 			} else if (timeRemaining == 0) {
 				countdownTimer.setText("GAME STARTING");
-				countdownTimer.setHorizontalAlignment(SwingConstants.CENTER);
+				//countdownTimer.setHorizontalAlignment(SwingConstants.CENTER);
 				timer.stop();
-				Timer gameStartingTimer = new Timer(10000, event -> startGame());
+				
+				Timer gameStartingTimer = new Timer(1000, event -> {
+					//countdownTimer.setText("Time remaining: " );
+					//countdownTimer.setHorizontalAlignment(SwingConstants.CENTER);
+					startGameTimer();
+				});//.setRepeats(false).start();
 				gameStartingTimer.setRepeats(false);
 				gameStartingTimer.start();
 			}
