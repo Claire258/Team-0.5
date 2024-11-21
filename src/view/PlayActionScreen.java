@@ -42,14 +42,14 @@ public class PlayActionScreen {
 
 	private JTextArea actionLogArea;
 
-    
+    private PhotonServerSocket pss;
 	private Clip musicClip;
 
-	public PlayActionScreen(List<Player> greenTeamPlayers, List<Player> redTeamPlayers, Map<Integer, String> equipmentMap) {
+	public PlayActionScreen(List<Player> greenTeamPlayers, List<Player> redTeamPlayers, Map<Integer, String> equipmentMap, PhotonServerSocket pss) {
 		this.greenTeamPlayers = greenTeamPlayers;
 		this.redTeamPlayers = redTeamPlayers;
 		this.equipmentMap = equipmentMap;
-
+		this.pss = pss;
 		this.playerScores = new HashMap<>();
 		for (Player player : greenTeamPlayers) {
 			playerScores.put(player.getId(), 0);
@@ -230,6 +230,7 @@ public class PlayActionScreen {
 		timer = new Timer(1000, e -> {
 			timeRemaining--;
 			countdownTimer.setText("Countdown to laser mayhem: " + timeRemaining);
+			//System.out.println("Can you see me?");
 			//countdownTimer.setHorizontalAlignment(SwingConstants.CENTER);
 
 			if (timeRemaining == 15) {
@@ -254,7 +255,7 @@ public class PlayActionScreen {
 	private void startGame() {
 		System.out.print("Game started!");
 
-		PhotonServerSocket pss = new PhotonServerSocket();
+		//PhotonServerSocket pss = new PhotonServerSocket();
 		pss.assignCode(202);
 		logAction("Game started!");
 
@@ -317,7 +318,7 @@ public class PlayActionScreen {
 		stopMusic();
 
 		SwingUtilities.invokeLater(() -> {
-			PlayerEntryScreen playerEntryScreen = new PlayerEntryScreen();
+			PlayerEntryScreen playerEntryScreen = new PlayerEntryScreen(pss);
 			playerEntryScreen.display();
 		});
 
