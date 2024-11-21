@@ -21,16 +21,25 @@ public class PhotonServerSocket {
             sin = new DatagramSocket(IN_PORT);
             sout = new DatagramSocket(OUT_PORT);
             System.out.println("Server input socket initialized: " + sin);
+            sin.setReuseAddress(true); //added
+            sout.setReuseAddress(true); //added
         } catch (SocketException se) {
             System.out.println("Error setting up sockets");
             se.printStackTrace();
         }
-        AddClientHandler();
+        if(sin == null || sout == null)
+        {
+			System.out.println("Error: sockets are currently null");
+		}
+        else {
+			System.out.println("sin and sout are not null");
+			AddClientHandler();
+		}
     }
 
     // Starts the client handler to listen for incoming messages
     private void AddClientHandler() {
-        System.out.println("Client handler setup");
+        System.out.println("Client handler setuppp");
         ch = new ClientHandler(sin, this);
         exe.submit(ch);  // Run client handler in a separate thread
     }
@@ -158,26 +167,13 @@ public class PhotonServerSocket {
         }
     }
 
-    public static void main(String[] args) {
-        PhotonServerSocket server = new PhotonServerSocket(); // Initialize the server
-
-        boolean gameRunning = true; // Flag to track game state
-        
-        while (gameRunning) {
-            // Wait for incoming messages
-            try {
-                // Optionally add a small delay to simulate periodic checks
-                Thread.sleep(1000); // Simulating a small delay
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            // Check if game over condition is met (received code 221)
-            if (!gameRunning) {
-                break;
-            }
-        }
-
-        System.out.println("Server shutdown: Game ended.");
-    }
+    /*public static void main(String[] args) {
+        try {
+			PhotonServerSocket server = new PhotonServerSocket();
+			System.out.println("Server started...");
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+		}
+    }*/
 }
