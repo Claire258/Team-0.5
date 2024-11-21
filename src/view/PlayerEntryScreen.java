@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.net.*;
+
 
 public class PlayerEntryScreen {
 
@@ -28,6 +30,11 @@ public class PlayerEntryScreen {
     private JTextField[][] redTeamFields = new JTextField[NUM_PLAYERS][3];
     private PhotonServerSocket pss;
     private JFrame frame;
+    
+    public PlayerEntryScreen(PhotonServerSocket pss)
+    {
+		this.pss = pss;
+	}
 	
     public void display() {
         JFrame frame = new JFrame("Laser Tag - Photon");
@@ -390,6 +397,9 @@ public class PlayerEntryScreen {
                 greenTeamPlayers.add(greenPlayer);
                 equipmentMap.put(id, equipmentId); // Add equipment ID to the map
                 playerManager.insertPlayer(greenPlayer);
+                
+                //Let the UDP know what the hardware codes are
+                assignCodeAndSendUDP(equipmentId);
             }
             if (!redTeamFields[i][0].getText().isEmpty()) {
                 int id = Integer.parseInt(redTeamFields[i][0].getText());
@@ -399,6 +409,9 @@ public class PlayerEntryScreen {
                 redTeamPlayers.add(redPlayer);
                 equipmentMap.put(id, equipmentId); // Add equipment ID to the map
                 playerManager.insertPlayer(redPlayer);
+                
+                //Let the UDP know what the hardware codes are
+                assignCodeAndSendUDP(equipmentId);
             }
         }
         JDialog dialog = new JDialog(frame, "ERROR SUBMITTING PLAYERS", true);
@@ -406,8 +419,30 @@ public class PlayerEntryScreen {
         if (greenTeamPlayers.isEmpty() && redTeamPlayers.isEmpty()) {
             JOptionPane.showMessageDialog(dialog, "Players empty!", "Error", JOptionPane.ERROR_MESSAGE);
         } else {
-            PlayActionScreen playActionScreen = new PlayActionScreen(greenTeamPlayers, redTeamPlayers, equipmentMap);
+            PlayActionScreen playActionScreen = new PlayActionScreen(greenTeamPlayers, redTeamPlayers, equipmentMap, pss);
             playActionScreen.display();
         }
     }
+    // Method to assign the code and send the equipment ID via UDP
+private void assignCodeAndSendUDP(String equipmentId) {
+    // Call assignCode to handle any internal logic you want to do with the equipmentId (e.g., storing it)
+    int equipmentCode = Integer.parseInt(equipmentId);
+    
+    // Now send the equipment ID over UDP
+    sendHardwareIdToUDP(equipmentId, "127.0.0.1", 7501); // Example IP and port
+}
+
+// Dummy sendHardwareIdToUDP method (use the actual UDP method you have)
+private void sendHardwareIdToUDP(String equipmentId, String udpIp, int udpPort) {
+    try {
+        DatagramSocket socket = new DatagramSocket();
+        byte[] message = equipmentId.getBytes();
+        DatagramPacket packet = new DatagramPacket(message, message.length, InetAddress.getByName(udpIp), udpPort);
+        socket.send(packet);
+        socket.close();
+        System.out.println("Sent equipment ID " + equipmentId + " to UDP at " + udpIp + ":" + udpPort + " supposedly");
+    } catch (Exception e) {
+        System.out.println("Error sending UDP packet: " + e.getMessage());
+    }
+}
 }
