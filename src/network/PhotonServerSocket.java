@@ -1,3 +1,6 @@
+//Server is ran through the other file. We do not need a server at all, get rid of this file entirely.
+
+
 package network;
 
 import java.net.*;
