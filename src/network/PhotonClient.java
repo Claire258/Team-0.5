@@ -55,6 +55,7 @@ public class PhotonClient {
         }
     }
 
+	//Do not create a main. The UDP socket should be created within constructor.
     public static void main(String[] args) {
 		PhotonClient client = new PhotonClient();
 
