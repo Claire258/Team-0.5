@@ -1,8 +1,8 @@
 package network;
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.*;
-import java.nio.charset.StandardCharsets;
+import java.net.InetAddress;
 
 public class PhotonClient {
 	//System.out.println("Client called");
@@ -11,67 +11,81 @@ public class PhotonClient {
     private static final int OUT_PORT = 7500; // Port the client uses to send data
     private static final String SERVER_ADDRESS = "127.0.0.1";  // Server address
 
-    private DatagramSocket socket;
+    private DatagramSocket sendSocket;
+    private DatagramSocket receiveSocket;
+    private InetAddress serverAddress;
+    //Keep track of how many times 202 has been sent (3 to end game)
+    private int terminationSigCount = 0;
+    private String receivedData = ""; //Hold the last message
+    
+    
 
     // Constructor for initializing the client
-    public PhotonClient() {
-			//System.out.println("Client called");
-        try {
-            socket = new DatagramSocket();
-            System.out.println("Client socket initialized: " + socket);
-        } catch (SocketException se) {
-            System.out.println("Error setting up client socket");
-            se.printStackTrace();
-        }
+    public PhotonClient() throws IOException {
+		sendSocket = new DatagramSocket();
+		receiveSocket = new DatagramSocket(OUT_PORT);
+		serverAddress = InetAddress.getByName(SERVER_ADDRESS);
+        
     }
 
-    // Sends a message (e.g., hit event) to the server
-    public void sendHitEvent(String shooterId, String targetId) {
-        String message = shooterId + ":" + targetId;
-        byte[] buffer = message.getBytes(StandardCharsets.UTF_8);
-
-        try {
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, InetAddress.getByName(SERVER_ADDRESS), OUT_PORT);
-            socket.send(packet);
-            System.out.println("Sent message: " + message);
-        } catch (Exception e) {
-            System.out.println("Error sending hit event");
-            e.printStackTrace();
-        }
-    }
-
-    // Receives messages from the server
-    public void receiveMessage() {
-        try {
-            byte[] buffer = new byte[1024];
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
-            socket.receive(packet);
-
-            String receivedMessage = new String(packet.getData(), 0, packet.getLength(), StandardCharsets.UTF_8);
-            System.out.println("Received from server: " + receivedMessage);
-        } catch (Exception e) {
-            System.out.println("Error receiving message");
-            e.printStackTrace();
-        }
-    }
-
-	//Do not create a main. The UDP socket should be created within constructor.
-    public static void main(String[] args) {
-		PhotonClient client = new PhotonClient();
-
-    // Try sending a message first
-		//client.sendHitEvent("101", "43");  // Send a hit event (player 101 hits the base)
+    public void sendEquipmentId(int equipmentId) throws IOException {
+		String message = String.valueOf(equipmentId);
+		sendBroadcast(message);
+	}
+	
+	public void sendStartSignal() throws IOException {
+		sendBroadcast("202");
+	}
+	
+	public void sendEndSignal() throws IOException {
+		sendBroadcast("221");
+	}
+	
+	public void listenAndProcess() {
+		byte[] buffer = new byte[1024];
+		while(terminationSigCount < 3) {
+			try {
+				DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+				receiveSocket.receive(packet);
+				String data = new String(packet.getData(), 0, packet.getLength());
+				processReceivedData(data);
+			} catch (IOException e) {
+				System.err.println("Error receiving packet: " + e.getMessage());
+			}
+		}
+		//Close the socket when you're done
+		sendSocket.close();
+		receiveSocket.close();
 		
-		
-    // Wait a short time and then try receiving
-		try {
-			Thread.sleep(1000);  // Give the server a moment to respond
-			client.receiveMessage();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}	
-
-		//clientSocket.receiveMessage();  // Receive the response from the server
-}
-
+	}
+	
+	private void processReceivedData(String data) throws IOException {
+		this.receivedData = data;
+		//See if it's time to end the game (send 3 times)
+		if(data.equals("221")) {
+			terminationSigCount++;
+			System.out.println("Termination signal count: " + terminationSigCount);
+		} else if (data.contains(":")) {
+			String [] parts = data.split(":");
+			int playerTransmitting = Integer.parseInt(parts[0]);
+			int playerHit = Integer.parseInt(parts[1]);
+			sendEquipmentId(playerHit);
+		}
+	}
+	
+	public String getReceivedData() {
+		return receivedData;
+	}
+	
+	private void sendBroadcast (String message) throws IOException {
+		byte [] data = message.getBytes();
+		DatagramPacket packet = new DatagramPacket(data, data.length, serverAddress, OUT_PORT);
+		sendSocket.send(packet);
+		System.out.println("Broadcasted message: " + message);
+	}
+	
+	public void run()
+	{
+		listenAndProcess();
+	}
 }
