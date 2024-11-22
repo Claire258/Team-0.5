@@ -2,7 +2,7 @@ package view;
 
 import model.Player;
 
-import network.PhotonServerSocket;
+import network.PhotonClient;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
@@ -42,20 +42,20 @@ public class PlayActionScreen {
 
 	private JTextArea actionLogArea;
 
-    
+    private PhotonClient pss;
 	private Clip musicClip;
 
-	public PlayActionScreen(List<Player> greenTeamPlayers, List<Player> redTeamPlayers, Map<Integer, String> equipmentMap) {
+	public PlayActionScreen(List<Player> greenTeamPlayers, List<Player> redTeamPlayers, Map<Integer, String> equipmentMap, PhotonClient pss) {
 		this.greenTeamPlayers = greenTeamPlayers;
 		this.redTeamPlayers = redTeamPlayers;
 		this.equipmentMap = equipmentMap;
-
+		this.pss = pss;
 		this.playerScores = new HashMap<>();
 		for (Player player : greenTeamPlayers) {
-			playerScores.put(player.getId(), 100);
+			playerScores.put(player.getId(), 0);
 		}
 		for (Player player : redTeamPlayers) {
-			playerScores.put(player.getId(), 100);
+			playerScores.put(player.getId(), 0);
 		}
 	}
 
@@ -165,9 +165,9 @@ public class PlayActionScreen {
 
 		for (Player player : players) {
 			JLabel playerLabel = new JLabel(
-					"ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: 100");
+					"ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: 0");
 			playerLabel.setForeground(LIGHT_TEXT);
-			playerLabel.setFont(new Font("Arial", Font.PLAIN, 18));
+			playerLabel.setFont(new Font("Arial", Font.PLAIN, 12));
 			playerListPanel.add(playerLabel);
 		}
 
@@ -209,20 +209,42 @@ public class PlayActionScreen {
 			musicClip.close();
 		}
 	}
+	private void startGameTimer()
+	{
+		Timer gameTimer = new Timer(1000, e-> {
+			if(this.gameTimer > 0){
+				this.gameTimer--;
+				countdownTimer.setText("Time remaining: " + (this.gameTimer / 60) + " minutes " + (this.gameTimer % 60) + " seconds");
+			}
+			else {
+				((Timer) e.getSource()).stop();
+				countdownTimer.setText("Game over!");
+				System.out.println("Game ending");
+				endGame();
+			}
+		});
+		gameTimer.start();
+	}
 
 	private void startCountdownTimer() {
 		timer = new Timer(1000, e -> {
 			timeRemaining--;
 			countdownTimer.setText("Countdown to laser mayhem: " + timeRemaining);
-			countdownTimer.setHorizontalAlignment(SwingConstants.CENTER);
+			//System.out.println("Can you see me?");
+			//countdownTimer.setHorizontalAlignment(SwingConstants.CENTER);
 
 			if (timeRemaining == 15) {
 				playMusic();
 			} else if (timeRemaining == 0) {
 				countdownTimer.setText("GAME STARTING");
-				countdownTimer.setHorizontalAlignment(SwingConstants.CENTER);
+				//countdownTimer.setHorizontalAlignment(SwingConstants.CENTER);
 				timer.stop();
-				Timer gameStartingTimer = new Timer(10000, event -> startGame());
+				
+				Timer gameStartingTimer = new Timer(1000, event -> {
+					//countdownTimer.setText("Time remaining: " );
+					//countdownTimer.setHorizontalAlignment(SwingConstants.CENTER);
+					startGameTimer();
+				});//.setRepeats(false).start();
 				gameStartingTimer.setRepeats(false);
 				gameStartingTimer.start();
 			}
@@ -233,9 +255,16 @@ public class PlayActionScreen {
 	private void startGame() {
 		System.out.print("Game started!");
 
-		PhotonServerSocket pss = new PhotonServerSocket();
-		pss.assignCode(202);
-		logAction("Game started!");
+		//PhotonServerSocket pss = new Photon
+		//ServerSocket();
+		try {
+			pss.sendStartSignal();
+			logAction("Game started!");
+		}
+		catch (IOException e) {
+			System.err.println("Error sending start signal: " + e.getMessage());
+			e.printStackTrace();
+		}
 
 		new Thread(() -> {
 			try {
@@ -278,7 +307,9 @@ public class PlayActionScreen {
 
 					if (counter >= 30) {
 						logAction("Game ended!");
-						pss.assignCode(221);
+						pss.sendEndSignal();
+						pss.sendEndSignal();
+						pss.sendEndSignal();
 						endGame();
 						break;
 					}
@@ -296,7 +327,7 @@ public class PlayActionScreen {
 		stopMusic();
 
 		SwingUtilities.invokeLater(() -> {
-			PlayerEntryScreen playerEntryScreen = new PlayerEntryScreen();
+			PlayerEntryScreen playerEntryScreen = new PlayerEntryScreen(pss);
 			playerEntryScreen.display();
 		});
 

@@ -1,20 +1,38 @@
 import view.PlayerEntryScreen;
 import view.SplashScreen;
-import network.PhotonServerSocket;
+import network.PhotonClient;
 import database.PlayerManager;
+import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) {
+	
+	try {
         PlayerManager playerManager = new PlayerManager();
+
         SplashScreen splashScreen = new SplashScreen();
-        PhotonServerSocket pss = new PhotonServerSocket();
-        PlayerEntryScreen playerEntryScreen = new PlayerEntryScreen();
+    
+        PhotonClient pss = new PhotonClient();
+        PlayerEntryScreen playerEntryScreen = new PlayerEntryScreen(pss);
 
         splashScreen.display();
+
         playerEntryScreen.display();
-
+        
         playerManager.loadPlayers();
-
-
-    }
+ 
+        Thread serverThread = new Thread(() -> {
+			try {
+				pss.run();
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+		});
+		serverThread.start();
+	} catch (IOException e) {
+		e.printStackTrace();
+	}
+	}
 }

@@ -1,7 +1,7 @@
 package view;
 
 import model.Player;
-import network.PhotonServerSocket;
+import network.PhotonClient;
 import database.PlayerManager;
 
 import javax.swing.*;
@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.net.*;
+import java.io.IOException;
 
 public class PlayerEntryScreen {
 
@@ -26,8 +28,13 @@ public class PlayerEntryScreen {
 
     private JTextField[][] greenTeamFields = new JTextField[NUM_PLAYERS][3];
     private JTextField[][] redTeamFields = new JTextField[NUM_PLAYERS][3];
-    private PhotonServerSocket pss;
+    private PhotonClient pss;
     private JFrame frame;
+    
+    public PlayerEntryScreen(PhotonClient pss)
+    {
+		this.pss = pss;
+	}
 	
     public void display() {
         JFrame frame = new JFrame("Laser Tag - Photon");
@@ -207,7 +214,13 @@ public class PlayerEntryScreen {
                 playerFields[i][0].setText(String.valueOf(player.getId()));
                 playerFields[i][1].setText(player.getCodeName());
                 playerFields[i][2].setText(hardwareId);
-                break;
+                //Transmit player code
+                try {
+					pss.sendEquipmentId(player.getId());
+				} catch (IOException e){
+					System.err.println("Failed to send equipment ID: " + player.getId());
+				}
+				break;
             }
         }
     }
@@ -220,7 +233,7 @@ public class PlayerEntryScreen {
             }
         }
         JOptionPane.showMessageDialog(frame, "All players have been cleared!", "Info", JOptionPane.INFORMATION_MESSAGE);
-	    PhotonServerSocket.RemoveBaseHitter(); //reset toggle for base hitter to allow a new one
+	    //PhotonServerSocket.RemoveBaseHitter(); //reset toggle for base hitter to allow a new one
     }
 
 
@@ -351,7 +364,6 @@ public class PlayerEntryScreen {
         dialog.add(teamSelector);
         dialog.add(new JLabel());
         dialog.add(submitButton);
-
         dialog.setVisible(true);
     }
 
@@ -370,7 +382,13 @@ public class PlayerEntryScreen {
 		//Added to set font sizes
 		playerFields[i][0].setFont(customFont);
 		playerFields[i][1].setFont(customFont);
-		playerFields[i][2].setFont(customFont);		
+		playerFields[i][2].setFont(customFont);	
+		try {
+			int equipmentIdInt = Integer.parseInt(equipmentId);
+			pss.sendEquipmentId(equipmentIdInt);
+			} catch (IOException e){
+				System.err.println("Failed to send equipment ID: " + e.getMessage());
+			}
 		break;
             }
         }
@@ -380,7 +398,7 @@ public class PlayerEntryScreen {
         List<Player> greenTeamPlayers = new ArrayList<>();
         List<Player> redTeamPlayers = new ArrayList<>();
         Map<Integer, String> equipmentMap = new HashMap<>(); // Map to store equipment IDs
-//mark right here
+
         for (int i = 0; i < NUM_PLAYERS; i++) {
             if (!greenTeamFields[i][0].getText().isEmpty()) {
                 int id = Integer.parseInt(greenTeamFields[i][0].getText());
@@ -390,7 +408,9 @@ public class PlayerEntryScreen {
                 greenTeamPlayers.add(greenPlayer);
                 equipmentMap.put(id, equipmentId); // Add equipment ID to the map
                 playerManager.insertPlayer(greenPlayer);
-                PhotonServerSocket.assignCode(id); //send out hardware ID of player to activate
+                
+                //Let the UDP know what the hardware codes are
+                //assignCodeAndSendUDP(equipmentId);
             }
             if (!redTeamFields[i][0].getText().isEmpty()) {
                 int id = Integer.parseInt(redTeamFields[i][0].getText());
@@ -400,18 +420,17 @@ public class PlayerEntryScreen {
                 redTeamPlayers.add(redPlayer);
                 equipmentMap.put(id, equipmentId); // Add equipment ID to the map
                 playerManager.insertPlayer(redPlayer);
-                PhotonServerSocket.assignCode(id); //send out hardware ID of player to activate
+                
             }
-            
         }
         JDialog dialog = new JDialog(frame, "ERROR SUBMITTING PLAYERS", true);
 
         if (greenTeamPlayers.isEmpty() && redTeamPlayers.isEmpty()) {
             JOptionPane.showMessageDialog(dialog, "Players empty!", "Error", JOptionPane.ERROR_MESSAGE);
         } else {
-            PlayActionScreen playActionScreen = new PlayActionScreen(greenTeamPlayers, redTeamPlayers, equipmentMap);
-            PhotonServerSocket.assignPlayActionScreen(playActionScreen);
+            PlayActionScreen playActionScreen = new PlayActionScreen(greenTeamPlayers, redTeamPlayers, equipmentMap, pss);
             playActionScreen.display();
         }
     }
+
 }
