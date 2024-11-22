@@ -1,7 +1,7 @@
 package view;
 
 import model.Player;
-import network.PhotonServerSocket;
+import network.PhotonClient;
 import database.PlayerManager;
 
 import javax.swing.*;
@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import java.net.*;
-
+import java.io.IOException;
 
 public class PlayerEntryScreen {
 
@@ -28,10 +28,10 @@ public class PlayerEntryScreen {
 
     private JTextField[][] greenTeamFields = new JTextField[NUM_PLAYERS][3];
     private JTextField[][] redTeamFields = new JTextField[NUM_PLAYERS][3];
-    private PhotonServerSocket pss;
+    private PhotonClient pss;
     private JFrame frame;
     
-    public PlayerEntryScreen(PhotonServerSocket pss)
+    public PlayerEntryScreen(PhotonClient pss)
     {
 		this.pss = pss;
 	}
@@ -214,7 +214,13 @@ public class PlayerEntryScreen {
                 playerFields[i][0].setText(String.valueOf(player.getId()));
                 playerFields[i][1].setText(player.getCodeName());
                 playerFields[i][2].setText(hardwareId);
-                break;
+                //Transmit player code
+                try {
+					pss.sendEquipmentId(player.getId());
+				} catch (IOException e){
+					System.err.println("Failed to send equipment ID: " + player.getId());
+				}
+				break;
             }
         }
     }
@@ -358,7 +364,6 @@ public class PlayerEntryScreen {
         dialog.add(teamSelector);
         dialog.add(new JLabel());
         dialog.add(submitButton);
-
         dialog.setVisible(true);
     }
 
@@ -377,7 +382,13 @@ public class PlayerEntryScreen {
 		//Added to set font sizes
 		playerFields[i][0].setFont(customFont);
 		playerFields[i][1].setFont(customFont);
-		playerFields[i][2].setFont(customFont);		
+		playerFields[i][2].setFont(customFont);	
+		try {
+			int equipmentIdInt = Integer.parseInt(equipmentId);
+			pss.sendEquipmentId(equipmentIdInt);
+			} catch (IOException e){
+				System.err.println("Failed to send equipment ID: " + e.getMessage());
+			}
 		break;
             }
         }
@@ -399,7 +410,7 @@ public class PlayerEntryScreen {
                 playerManager.insertPlayer(greenPlayer);
                 
                 //Let the UDP know what the hardware codes are
-                assignCodeAndSendUDP(equipmentId);
+                //assignCodeAndSendUDP(equipmentId);
             }
             if (!redTeamFields[i][0].getText().isEmpty()) {
                 int id = Integer.parseInt(redTeamFields[i][0].getText());
@@ -410,8 +421,6 @@ public class PlayerEntryScreen {
                 equipmentMap.put(id, equipmentId); // Add equipment ID to the map
                 playerManager.insertPlayer(redPlayer);
                 
-                //Let the UDP know what the hardware codes are
-                assignCodeAndSendUDP(equipmentId);
             }
         }
         JDialog dialog = new JDialog(frame, "ERROR SUBMITTING PLAYERS", true);
@@ -423,26 +432,5 @@ public class PlayerEntryScreen {
             playActionScreen.display();
         }
     }
-    // Method to assign the code and send the equipment ID via UDP
-private void assignCodeAndSendUDP(String equipmentId) {
-    // Call assignCode to handle any internal logic you want to do with the equipmentId (e.g., storing it)
-    int equipmentCode = Integer.parseInt(equipmentId);
-    
-    // Now send the equipment ID over UDP
-    sendHardwareIdToUDP(equipmentId, "127.0.0.1", 7501); // Example IP and port
-}
 
-// Dummy sendHardwareIdToUDP method (use the actual UDP method you have)
-private void sendHardwareIdToUDP(String equipmentId, String udpIp, int udpPort) {
-    try {
-        DatagramSocket socket = new DatagramSocket();
-        byte[] message = equipmentId.getBytes();
-        DatagramPacket packet = new DatagramPacket(message, message.length, InetAddress.getByName(udpIp), udpPort);
-        socket.send(packet);
-        socket.close();
-        System.out.println("Sent equipment ID " + equipmentId + " to UDP at " + udpIp + ":" + udpPort + " supposedly");
-    } catch (Exception e) {
-        System.out.println("Error sending UDP packet: " + e.getMessage());
-    }
-}
 }
