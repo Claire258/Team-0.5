@@ -2,7 +2,7 @@ package view;
 
 import model.Player;
 
-import network.PhotonServerSocket;
+import network.PhotonClient;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
@@ -42,10 +42,10 @@ public class PlayActionScreen {
 
 	private JTextArea actionLogArea;
 
-    private PhotonServerSocket pss;
+    private PhotonClient pss;
 	private Clip musicClip;
 
-	public PlayActionScreen(List<Player> greenTeamPlayers, List<Player> redTeamPlayers, Map<Integer, String> equipmentMap, PhotonServerSocket pss) {
+	public PlayActionScreen(List<Player> greenTeamPlayers, List<Player> redTeamPlayers, Map<Integer, String> equipmentMap, PhotonClient pss) {
 		this.greenTeamPlayers = greenTeamPlayers;
 		this.redTeamPlayers = redTeamPlayers;
 		this.equipmentMap = equipmentMap;
@@ -255,9 +255,16 @@ public class PlayActionScreen {
 	private void startGame() {
 		System.out.print("Game started!");
 
-		//PhotonServerSocket pss = new PhotonServerSocket();
-		pss.assignCode(202);
-		logAction("Game started!");
+		//PhotonServerSocket pss = new Photon
+		//ServerSocket();
+		try {
+			pss.sendStartSignal();
+			logAction("Game started!");
+		}
+		catch (IOException e) {
+			System.err.println("Error sending start signal: " + e.getMessage());
+			e.printStackTrace();
+		}
 
 		new Thread(() -> {
 			try {
@@ -300,7 +307,9 @@ public class PlayActionScreen {
 
 					if (counter >= 30) {
 						logAction("Game ended!");
-						pss.assignCode(221);
+						pss.sendEndSignal();
+						pss.sendEndSignal();
+						pss.sendEndSignal();
 						endGame();
 						break;
 					}
