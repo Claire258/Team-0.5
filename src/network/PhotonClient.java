@@ -14,7 +14,7 @@ public class PhotonClient {
     private DatagramSocket sendSocket;
     private DatagramSocket receiveSocket;
     private InetAddress serverAddress;
-    //Keep track of how many times 202 has been sent (3 to end game)
+    //Keep track of how many times 221 has been sent (3 to end game)
     private int terminationSigCount = 0;
     private String receivedData = ""; //Hold the last message
     
@@ -23,7 +23,7 @@ public class PhotonClient {
     // Constructor for initializing the client
     public PhotonClient() throws IOException {
 		sendSocket = new DatagramSocket();
-		receiveSocket = new DatagramSocket(OUT_PORT);
+		receiveSocket = new DatagramSocket(IN_PORT);
 		serverAddress = InetAddress.getByName(SERVER_ADDRESS);
         
     }
@@ -34,6 +34,7 @@ public class PhotonClient {
 	}
 	
 	public void sendStartSignal() throws IOException {
+		System.out.println("Sending signal 202 to " + serverAddress + " : " + OUT_PORT);
 		sendBroadcast("202");
 	}
 	
