@@ -211,6 +211,12 @@ public class PlayActionScreen {
 	}
 	private void startGameTimer()
 	{
+		try {
+					pss.sendStartSignal();
+					System.out.println("Successfully broadcasted signal 202");
+				} catch (IOException e){
+					System.err.println("Failed to send signal to start game");
+				}
 		Timer gameTimer = new Timer(1000, e-> {
 			if(this.gameTimer > 0){
 				this.gameTimer--;
