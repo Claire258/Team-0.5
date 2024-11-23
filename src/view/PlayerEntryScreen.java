@@ -216,11 +216,12 @@ public class PlayerEntryScreen {
                 playerFields[i][2].setText(hardwareId);
                 //Transmit player code
                 try {
-					pss.sendEquipmentId(player.getId());
-				} catch (IOException e){
-					System.err.println("Failed to send equipment ID: " + player.getId());
-				}
-				break;
+			int hardwareID = Integer.parseInt(hardwareId);
+			pss.sendEquipmentId(hardwareID);
+		} catch (IOException e){
+			System.err.println("Failed to send equipment ID");
+		}
+		break;
             }
         }
     }
