@@ -236,21 +236,16 @@ public class PlayActionScreen {
 		timer = new Timer(1000, e -> {
 			timeRemaining--;
 			countdownTimer.setText("Countdown to laser mayhem: " + timeRemaining);
-			//System.out.println("Can you see me?");
-			//countdownTimer.setHorizontalAlignment(SwingConstants.CENTER);
-
 			if (timeRemaining == 15) {
 				playMusic();
 			} else if (timeRemaining == 0) {
 				countdownTimer.setText("GAME STARTING");
-				//countdownTimer.setHorizontalAlignment(SwingConstants.CENTER);
+				
 				timer.stop();
 				
 				Timer gameStartingTimer = new Timer(1000, event -> {
-					//countdownTimer.setText("Time remaining: " );
-					//countdownTimer.setHorizontalAlignment(SwingConstants.CENTER);
 					startGameTimer();
-				});//.setRepeats(false).start();
+				});
 				gameStartingTimer.setRepeats(false);
 				gameStartingTimer.start();
 			}
@@ -260,9 +255,7 @@ public class PlayActionScreen {
 
 	private void startGame() {
 		System.out.print("Game started!");
-
-		//PhotonServerSocket pss = new Photon
-		//ServerSocket();
+		//Send the start signal for the game
 		try {
 			pss.sendStartSignal();
 			logAction("Game started!");
@@ -327,6 +320,14 @@ public class PlayActionScreen {
 		}).start();
 	}
 	private void endGame() {
+		try {
+			pss.sendEndSignal();
+			logAction("Game ending");
+		}
+		catch (IOException e) {
+			System.err.println("Error sending end signal: " + e.getMessage());
+			e.printStackTrace();
+		}
 		greenTeamPlayers.clear();
 		redTeamPlayers.clear();
 
