@@ -56,13 +56,44 @@
    ```bash
    ./run.bash
 
-## To simulate traffic between players (For testing purposes only):
-Navigate to src/network
+# Game Mechanics
 
-1. Compile TrafficGenerator.java:
-   ```bash
-   javac TrafficGenerator.java
-2. Run TrafficGenerator.java:
-   ```bash
-   java TrafficGenerator.java
-3. Your simulation is now ready to receive traffic from the game software!
+This section further clarifies player entry screen mechanics, including how to add and load players, assign them to teams, and submit the player list to start the game.
+
+---
+
+### Adding a New Player
+- **Step 1:** To add a new player, select the **"Enter New Player"** button at the bottom left of the screen.
+- **Step 2:** Enter the following details for the new player in the provided text fields:
+  - **User ID**
+  - **Code Name**
+  - **Hardware ID**
+- **Step 3:** Assign the player to either the **Red Team** or **Green Team** using the team selection buttons.
+
+---
+
+### Loading an Existing Player
+- **Step 1:** To load an existing player from the database, select the **"Load Player"** button at the bottom right of the screen.
+- **Step 2:** Choose the player from the drop-down list.
+- **Step 3:** Enter the player's **Hardware ID**.
+- **Step 4:** Assign the loaded player to either the **Red Team** or **Green Team**.
+
+---
+
+### Clearing All Players
+- To clear all players from the screen, press the **F12** key.
+
+---
+
+### Submitting Players and Starting the Game
+- Once all players have been added or loaded and assigned to teams, select one of the following options to submit the list and start the game:
+  - Click the **"Submit Player"** button at the bottom of the screen, or
+  - Press the **F5** key.
+
+---
+
+### End of Game
+- At the end of the game, a pop-up window will appear showing the team with the highest score.
+- You can choose one of the following actions:
+  - **End the program**, or
+  - **Return to the player entry screen** to start a new game.
