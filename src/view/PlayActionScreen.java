@@ -332,17 +332,58 @@ public class PlayActionScreen {
 		redTeamPlayers.clear();
 
 		stopMusic();
-
-		SwingUtilities.invokeLater(() -> {
-			PlayerEntryScreen playerEntryScreen = new PlayerEntryScreen(pss);
-			playerEntryScreen.display();
-		});
-
-		Window currentWindow = SwingUtilities.getWindowAncestor(countdownTimer);
-		if (currentWindow != null) {
-			currentWindow.dispose();
-		}
+		
+		SwingUtilities.invokeLater(this::showEndGamePopup);
 	}
+	
+	private void showEndGamePopup() {
+    // Figure out who won
+    String winningTeam;
+    if (greenTeamScore > redTeamScore) {
+        winningTeam = "Green Team wins with a score of " + greenTeamScore + "!";
+    } else if (redTeamScore > greenTeamScore) {
+        winningTeam = "Red Team wins with a score of " + redTeamScore + "!";
+    } else {
+        winningTeam = "It's a tie! Both teams scored " + greenTeamScore + "!";
+    }
+
+    // Make the window
+    JFrame popupFrame = new JFrame("Game Over");
+    popupFrame.setSize(400, 200);
+    popupFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    popupFrame.setLayout(new BorderLayout());
+
+    // Add a label to display the winner
+    JLabel winnerLabel = new JLabel(winningTeam, SwingConstants.CENTER);
+    winnerLabel.setFont(new Font("Arial", Font.BOLD, 16));
+    winnerLabel.setForeground(Color.BLACK);
+    popupFrame.add(winnerLabel, BorderLayout.CENTER);
+
+    // Add buttons for "End Program" and "Return to Player Entry Screen"
+    JPanel buttonPanel = new JPanel(new FlowLayout());
+    JButton endProgramButton = new JButton("End Program");
+    JButton returnToEntryButton = new JButton("Return to Player Entry");
+
+    endProgramButton.addActionListener(e -> {
+        System.exit(0); // Exit the program
+    });
+
+    returnToEntryButton.addActionListener(e -> {
+        popupFrame.dispose(); // Close the popup
+        SwingUtilities.invokeLater(() -> {
+            new PlayerEntryScreen(pss).display(); // Return to player entry screen
+        });
+    });
+
+    buttonPanel.add(endProgramButton);
+    buttonPanel.add(returnToEntryButton);
+    popupFrame.add(buttonPanel, BorderLayout.SOUTH);
+
+    // Center the popup and make it visible
+    popupFrame.setLocationRelativeTo(null);
+    popupFrame.setVisible(true);
+}
+
 
 
 	private void updateScores(int hitterId, int hitId, boolean isBaseHit) {
