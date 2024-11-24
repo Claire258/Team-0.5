@@ -9,6 +9,10 @@
 | JacksonFinger                    | Jackson Finger          | jackson27814400    |
 | Will-Taylor08                    | Will Taylor             | wmt001            |
 
+## Table of Contents
+1. [How to Run the Application](#how-to-run-the-application)
+2. [Install Git LFS](#install-git-lfs)
+3. [Game Mechanics](#game-mechanics)
 
 ## How to Run the Application
 
@@ -40,7 +44,7 @@
    ```bash
    ./run.bash
 
-## Install Git LFS (for game sounds to work)!
+## Install Git LFS
 
 1. Install Git LFS:
    For macOS:
