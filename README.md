@@ -63,20 +63,20 @@ This section further clarifies player entry screen mechanics, including how to a
 ---
 
 ### Adding a New Player
-- **Step 1:** To add a new player, select the **"Enter New Player"** button at the bottom left of the screen.
-- **Step 2:** Enter the following details for the new player in the provided text fields:
+1. To add a new player, select the **"Enter New Player"** button at the bottom left of the screen.
+2. Enter the following details for the new player in the provided text fields:
   - **User ID**
   - **Code Name**
   - **Hardware ID**
-- **Step 3:** Assign the player to either the **Red Team** or **Green Team** using the team selection buttons.
+3. Assign the player to either the **Red Team** or **Green Team** using the team selection buttons.
 
 ---
 
 ### Loading an Existing Player
-- **Step 1:** To load an existing player from the database, select the **"Load Player"** button at the bottom right of the screen.
-- **Step 2:** Choose the player from the drop-down list.
-- **Step 3:** Enter the player's **Hardware ID**.
-- **Step 4:** Assign the loaded player to either the **Red Team** or **Green Team**.
+1. To load an existing player from the database, select the **"Load Player"** button at the bottom right of the screen.
+2. Choose the player from the drop-down list.
+3. Enter the player's **Hardware ID**.
+4. Assign the loaded player to either the **Red Team** or **Green Team**.
 
 ---
 
