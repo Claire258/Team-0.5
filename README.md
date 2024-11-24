@@ -9,22 +9,6 @@
 | JacksonFinger                    | Jackson Finger          | jackson27814400    |
 | Will-Taylor08                    | Will Taylor             | wmt001            |
 
-## Install Git LFS (for game sounds to work)!
-
-1. Install Git LFS:
-   For macOS:
-   ```bash
-   brew install git-lfs
-   ```
-   For Linux:
-   ```bash
-   sudo apt install git-lfs
-2. Initialize Git LFS: In your repository (after cloning), run:
-   ```bash
-   git lfs install
-3. Fetch the actual files. (fetches .wav file):
-   ```bash
-   git lfs pull
 
 ## How to Run the Application
 
@@ -55,6 +39,23 @@
 5. Start the program by typing:
    ```bash
    ./run.bash
+
+## Install Git LFS (for game sounds to work)!
+
+1. Install Git LFS:
+   For macOS:
+   ```bash
+   brew install git-lfs
+   ```
+   For Linux:
+   ```bash
+   sudo apt install git-lfs
+2. Initialize Git LFS: In your repository (after cloning), run:
+   ```bash
+   git lfs install
+3. Fetch the actual files. (fetches .wav file):
+   ```bash
+   git lfs pull
 
 # Game Mechanics
 
