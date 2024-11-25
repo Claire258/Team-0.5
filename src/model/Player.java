@@ -35,10 +35,10 @@ public class Player {
     public void setCodeName(String codeName) {
         this.codeName = codeName;
     }
-	public void getBaseHit() {
+	public boolean getBaseHit() {
 		return hitBase;
 	}
-	public boolean setBaseHit(boolean updatedBaseHit) {
+	public void setBaseHit(boolean updatedBaseHit) {
 		hitBase = updatedBaseHit;
 	}
 }
