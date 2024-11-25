@@ -447,17 +447,40 @@ public class PlayActionScreen {
 
 	private void updatePlayerPanels() {
 		for (int i = 0; i < greenTeamPlayers.size(); i++) {
+			greenTeamPlayers.sort((p1,p2) -> playerScores.get(p2.getId()) - playerScores.get(p1.getId()));
 			Player player = greenTeamPlayers.get(i);
 			int score = playerScores.get(player.getId());
 			JLabel playerLabel = (JLabel) greenTeamPlayerListPanel.getComponent(i);
 			playerLabel.setText("ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: " + score);
+			
+			if (i == 0)
+			{
+				nameFlashEffect(playerLabel);
+			}
 		}
 		for (int i = 0; i < redTeamPlayers.size(); i++) {
+			redTeamPlayers.sort((p1,p2) -> playerScores.get(p2.getId()) - playerScores.get(p1.getId()));
 			Player player = redTeamPlayers.get(i);
 			int score = playerScores.get(player.getId());
 			JLabel playerLabel = (JLabel) redTeamPlayerListPanel.getComponent(i);
 			playerLabel.setText("ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: " + score);
+			if (i == 0)
+			{
+				nameFlashEffect(playerLabel);
+			}
 		}
+	}
+	private void nameFlashEffect(JLabel playerLabel) {
+		Color currentColor = playerLabel.getForeground();
+		Timer timer = new Timer(200, e -> {
+			if (currentColor.equals(LIGHT_TEXT)) {
+				playerLabel.setForeground(Color.YELLOW);
+			}
+			else {
+				playerLabel.setForeground(LIGHT_TEXT);
+			}
+		});
+		timer.start();
 	}
 
 	private boolean isNumeric(String str) {
@@ -478,7 +501,7 @@ public class PlayActionScreen {
 		SimpleAttributeSet center = new SimpleAttributeSet();
 		StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
 		StyleConstants.setFontSize(center, 14);
-		StyleConstants.setForeground(center, Color.BLUE);
+		StyleConstants.setForeground(center, LIGHT_TEXT);
 
 		try {
 			doc.insertString(doc.getLength(), action + "\n", null);
