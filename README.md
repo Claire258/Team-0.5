@@ -3,11 +3,8 @@
 ## Team Members
 | GitHub Username                  | Real Name                | Trello Username   |
 |----------------------------------|-------------------------|-------------------|
-| BriceStegall                     | Brice Stegall           | bs0911            |
 | Claire258                        | Claire Oliver           | claireoliver22    |
 | theonlyduckleftinmars            | Jose Eduardo Hernandez  | edjh22            |
-| JacksonFinger                    | Jackson Finger          | jackson27814400    |
-| Will-Taylor08                    | Will Taylor             | wmt001            |
 
 ## Table of Contents
 1. [How to Run the Application](#how-to-run-the-application)
