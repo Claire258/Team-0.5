@@ -4,12 +4,12 @@ public class Player {
     private int id;
     private int score = 0;
     private String codeName;
-    private int baseHits = 0;
     private boolean hitBase = false;
 
     public Player(int id, String codeName) {
         this.id = id;
         this.codeName = codeName;
+        hitBase = false;
     }
 
     public int getId() {
@@ -35,5 +35,10 @@ public class Player {
     public void setCodeName(String codeName) {
         this.codeName = codeName;
     }
-	
+	public void getBaseHit() {
+		return hitBase;
+	}
+	public boolean setBaseHit(boolean updatedBaseHit) {
+		hitBase = updatedBaseHit;
+	}
 }
