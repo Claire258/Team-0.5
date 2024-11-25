@@ -257,6 +257,7 @@ public class PlayActionScreen {
 
 	private void startGame() {
 
+		logAction("Game Starting!");
 		try {
 			pss.sendStartSignal();
 		} catch (IOException e) {
