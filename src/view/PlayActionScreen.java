@@ -32,7 +32,9 @@ public class PlayActionScreen {
 	private List<Player> greenTeamPlayers;
 	private List<Player> redTeamPlayers;
 	private Map<Integer, String> equipmentMap;
+	private Map<Integer, Player> playerIdToPlayer;
 	private Map<Integer, Integer> playerScores;
+	private Map<String, Integer> equipmentIdToPlayerId;
 
 	private JPanel greenTeamPlayerListPanel;
 	private JPanel redTeamPlayerListPanel;
@@ -45,12 +47,15 @@ public class PlayActionScreen {
     private PhotonClient pss;
 	private Clip musicClip;
 
-	public PlayActionScreen(List<Player> greenTeamPlayers, List<Player> redTeamPlayers, Map<Integer, String> equipmentMap, PhotonClient pss) {
+	public PlayActionScreen(List<Player> greenTeamPlayers, List<Player> redTeamPlayers, Map<Integer, String> equipmentMap,
+							Map<String, Integer> equipmentIdToPlayerId ,Map<Integer, Player> playerIdToPlayer, PhotonClient pss) {
 		this.greenTeamPlayers = greenTeamPlayers;
 		this.redTeamPlayers = redTeamPlayers;
 		this.equipmentMap = equipmentMap;
+		this.playerIdToPlayer = playerIdToPlayer;
 		this.pss = pss;
 		this.playerScores = new HashMap<>();
+		this.equipmentIdToPlayerId = equipmentIdToPlayerId;
 		for (Player player : greenTeamPlayers) {
 			playerScores.put(player.getId(), 0);
 		}
@@ -80,18 +85,17 @@ public class PlayActionScreen {
 		
 		JPanel scorePanel = new JPanel(new GridLayout(2,1));
 		scorePanel.setBackground(DARK_BACKGROUND);
-		
-		//Display green team total score
+
 		int greenScore = scoreTotal(greenTeamPlayers);
 		greenTeamScoreLabel = new JLabel("Green team Score: " + greenScore, SwingConstants.CENTER);
 		greenTeamScoreLabel.setForeground(Color.GREEN);
 		greenTeamScoreLabel.setFont(new Font("Arial", Font.BOLD, 18));
-		//Display red team total score
+
 		int redScore = scoreTotal(redTeamPlayers);
 		redTeamScoreLabel = new JLabel("Red team Score: " + redScore, SwingConstants.CENTER);
 		redTeamScoreLabel.setForeground(Color.RED);
 		redTeamScoreLabel.setFont(new Font("Arial", Font.BOLD, 18));
-		//Add score panels to the screen
+
 		scorePanel.add(greenTeamScoreLabel);
 		scorePanel.add(redTeamScoreLabel);
 
@@ -211,12 +215,6 @@ public class PlayActionScreen {
 	}
 	private void startGameTimer()
 	{
-		try {
-					pss.sendStartSignal();
-					System.out.println("Successfully broadcasted signal 202");
-				} catch (IOException e){
-					System.err.println("Failed to send signal to start game");
-				}
 		Timer gameTimer = new Timer(1000, e-> {
 			if(this.gameTimer > 0){
 				this.gameTimer--;
@@ -240,7 +238,7 @@ public class PlayActionScreen {
 				playMusic();
 			} else if (timeRemaining == 0) {
 				countdownTimer.setText("GAME STARTING");
-				
+				startGame();
 				timer.stop();
 				
 				Timer gameStartingTimer = new Timer(1000, event -> {
@@ -254,71 +252,115 @@ public class PlayActionScreen {
 	}
 
 	private void startGame() {
-		System.out.print("Game started!");
-		//Send the start signal for the game
+		System.out.println("Game started!");
+		logAction("Game started!");
+
 		try {
 			pss.sendStartSignal();
-			logAction("Game started!");
-		}
-		catch (IOException e) {
-			System.err.println("Error sending start signal: " + e.getMessage());
-			e.printStackTrace();
+		} catch (IOException e) {
+			logAction("Failed to send start signal: " + e.getMessage());
+			return;
 		}
 
 		new Thread(() -> {
 			try {
-				Random random = new Random();
-				int counter = 0;
+				String lastProcessedData = null;
 
 				while (true) {
-					Player greenPlayer = greenTeamPlayers.get(random.nextInt(greenTeamPlayers.size()));
-					Player redPlayer = redTeamPlayers.get(random.nextInt(redTeamPlayers.size()));
+					String receivedData = pss.getReceivedData();
 
-					String greenEquipmentId = equipmentMap.get(greenPlayer.getId());
-					String redEquipmentId = equipmentMap.get(redPlayer.getId());
-
-					if (!isNumeric(greenEquipmentId) || !isNumeric(redEquipmentId)) {
-						logAction("Invalid equipment ID detected. Skipping event.");
+					if (receivedData == null || receivedData.isEmpty() || receivedData.equals(lastProcessedData)) {
+						Thread.sleep(100);
 						continue;
 					}
 
-					String message;
-					if (random.nextBoolean()) {
-						message = redPlayer.getCodeName() + " hit " + greenPlayer.getCodeName() + "!";
-						updateScores(redPlayer.getId(), greenPlayer.getId(), false);
-					} else {
-						message = greenPlayer.getCodeName() + " hit " + redPlayer.getCodeName() + "!";
-						updateScores(greenPlayer.getId(), redPlayer.getId(), false);
-					}
+					lastProcessedData = receivedData;
 
-					if (counter == 10) {
-						message = redPlayer.getCodeName() + " hit the base!";
-						updateScores(redPlayer.getId(), -1, true);
-					}
-					if (counter == 20) {
-						message = greenPlayer.getCodeName() + " hit the base!";
-						updateScores(greenPlayer.getId(), -1, true);
-					}
+					if (receivedData.equals("53")) {
+						greenTeamScore += 100;
+						updateTeamScores();
+						greenTeamPlayers.forEach(player ->
+								playerScores.put(player.getId(), playerScores.getOrDefault(player.getId(), 0) + 100)
+						);
+						logAction("Green Team scores 100 points! Red base hit.");
 
-					logAction(message);
+					} else if (receivedData.equals("43")) {
+						redTeamScore += 100;
+						updateTeamScores();
+						redTeamPlayers.forEach(player ->
+								playerScores.put(player.getId(), playerScores.getOrDefault(player.getId(), 0) + 100)
+						);
+						logAction("Red Team scores 100 points! Green base hit.");
+					} else if (receivedData.contains(":")) {
+						String[] parts = receivedData.split(":");
+						if (parts.length == 2) {
+							String transmitterEquipmentId = parts[0].trim();
+							String hitEquipmentId = parts[1].trim();
 
-					Thread.sleep(random.nextInt(3000) + 1000);
+//							if (!equipmentIdToPlayerId.containsKey(transmitterEquipmentId)) {
+//								logAction("Error: Transmitting equipment ID not found: " + transmitterEquipmentId);
+//								continue;
+//							}
+//							if (!equipmentIdToPlayerId.containsKey(hitEquipmentId)) {
+//								logAction("Error: Hit equipment ID not found: " + hitEquipmentId);
+//								continue;
+//							}
 
-					if (counter >= 30) {
-						logAction("Game ended!");
-						pss.sendEndSignal();
-						pss.sendEndSignal();
-						pss.sendEndSignal();
-						endGame();
-						break;
+							int playerTransmitting = equipmentIdToPlayerId.get(transmitterEquipmentId);
+							int playerHit = equipmentIdToPlayerId.get(hitEquipmentId);
+
+							Player player1 = playerIdToPlayer.get(playerTransmitting);
+							Player player2 = playerIdToPlayer.get(playerHit);
+
+							String transmitterCodename = player1.getCodeName();
+							String hitCodename = player2.getCodeName();
+
+							playerScores.put(playerTransmitting,
+									playerScores.getOrDefault(playerTransmitting, 0) + 10);
+							playerScores.put(playerHit,
+									playerScores.getOrDefault(playerHit, 0) - 10);
+
+
+							if (isSameTeam(playerTransmitting, playerHit)) {
+								logAction("Team tag: " + transmitterCodename +
+										  " hit their teammate " + hitCodename);
+								pss.sendEquipmentId(Integer.parseInt(transmitterEquipmentId));
+							} else {
+								logAction(transmitterCodename +
+										" hit " + hitCodename);
+								pss.sendEquipmentId(Integer.parseInt(hitEquipmentId));
+							}
+							updateTeamScores();
+							updatePlayerPanels();
+						} else {
+							logAction("Error: Malformed data received: " + receivedData);
+						}
 					}
-					counter++;
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				logAction("Error during game logic: " + e.getMessage());
 			}
 		}).start();
 	}
+
+	private boolean isSameTeam(int player1Id, int player2Id) {
+		try {
+
+			boolean inGreenTeam = greenTeamPlayers.stream().anyMatch(player -> player.getId() == player1Id) &&
+					greenTeamPlayers.stream().anyMatch(player -> player.getId() == player2Id);
+
+			boolean inRedTeam = redTeamPlayers.stream().anyMatch(player -> player.getId() == player1Id) &&
+					redTeamPlayers.stream().anyMatch(player -> player.getId() == player2Id);
+
+			return inGreenTeam || inRedTeam;
+		} catch (NumberFormatException e) {
+			System.err.println("Error: Invalid player ID format. Player1: " + player1Id + ", Player2: " + player2Id);
+			return false;
+		}
+	}
+
+
+
 	private void endGame() {
 		try {
 			pss.sendEndSignal();
@@ -337,7 +379,6 @@ public class PlayActionScreen {
 	}
 	
 	private void showEndGamePopup() {
-    // Figure out who won
     String winningTeam;
     if (greenTeamScore > redTeamScore) {
         winningTeam = "Green Team wins with a score of " + greenTeamScore + "!";
@@ -347,31 +388,28 @@ public class PlayActionScreen {
         winningTeam = "It's a tie! Both teams scored " + greenTeamScore + "!";
     }
 
-    // Make the window
     JFrame popupFrame = new JFrame("Game Over");
     popupFrame.setSize(400, 200);
     popupFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     popupFrame.setLayout(new BorderLayout());
 
-    // Add a label to display the winner
     JLabel winnerLabel = new JLabel(winningTeam, SwingConstants.CENTER);
     winnerLabel.setFont(new Font("Arial", Font.BOLD, 16));
     winnerLabel.setForeground(Color.BLACK);
     popupFrame.add(winnerLabel, BorderLayout.CENTER);
 
-    // Add buttons for "End Program" and "Return to Player Entry Screen"
     JPanel buttonPanel = new JPanel(new FlowLayout());
     JButton endProgramButton = new JButton("End Program");
     JButton returnToEntryButton = new JButton("Return to Player Entry");
 
     endProgramButton.addActionListener(e -> {
-        System.exit(0); // Exit the program
+        System.exit(0);
     });
 
     returnToEntryButton.addActionListener(e -> {
-        popupFrame.dispose(); // Close the popup
+        popupFrame.dispose();
         SwingUtilities.invokeLater(() -> {
-            new PlayerEntryScreen(pss).display(); // Return to player entry screen
+            new PlayerEntryScreen(pss).display();
         });
     });
 
@@ -379,12 +417,9 @@ public class PlayActionScreen {
     buttonPanel.add(returnToEntryButton);
     popupFrame.add(buttonPanel, BorderLayout.SOUTH);
 
-    // Center the popup and make it visible
     popupFrame.setLocationRelativeTo(null);
     popupFrame.setVisible(true);
 }
-
-
 
 	private void updateScores(int hitterId, int hitId, boolean isBaseHit) {
 		int hitScoreChange = isBaseHit ? 20 : -10;

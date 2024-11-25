@@ -398,40 +398,47 @@ public class PlayerEntryScreen {
         PlayerManager playerManager = new PlayerManager();
         List<Player> greenTeamPlayers = new ArrayList<>();
         List<Player> redTeamPlayers = new ArrayList<>();
-        Map<Integer, String> equipmentMap = new HashMap<>(); // Map to store equipment IDs
+        Map<Integer, String> equipmentMap = new HashMap<>(); // Player ID -> Equipment ID
+        Map<Integer, Player> playerIdToPlayer = new HashMap<>(); // Player ID -> Player object
+        Map<String, Integer> equipmentIdToPlayerId = new HashMap<>(); // Equipment ID -> Player IDMap<String, Integer> equipmentIdToPlayerId = new HashMap<>(); // Equipment ID -> Player ID
+
 
         for (int i = 0; i < NUM_PLAYERS; i++) {
             if (!greenTeamFields[i][0].getText().isEmpty()) {
-                int id = Integer.parseInt(greenTeamFields[i][0].getText());
-                String codename = greenTeamFields[i][1].getText();
-                String equipmentId = greenTeamFields[i][2].getText();
+                int id = Integer.parseInt(greenTeamFields[i][0].getText()); // Player ID
+                String codename = greenTeamFields[i][1].getText(); // Codename
+                String equipmentId = greenTeamFields[i][2].getText(); // Equipment ID
                 Player greenPlayer = new Player(id, codename);
                 greenTeamPlayers.add(greenPlayer);
-                equipmentMap.put(id, equipmentId); // Add equipment ID to the map
-                playerManager.insertPlayer(greenPlayer);
-                
-                //Let the UDP know what the hardware codes are
-                //assignCodeAndSendUDP(equipmentId);
+                equipmentMap.put(id, equipmentId); // Player ID -> Equipment ID
+                equipmentIdToPlayerId.put(equipmentId, id); // Equipment ID -> Player ID
+                playerIdToPlayer.put(id, greenPlayer);
             }
             if (!redTeamFields[i][0].getText().isEmpty()) {
-                int id = Integer.parseInt(redTeamFields[i][0].getText());
-                String codename = redTeamFields[i][1].getText();
-                String equipmentId = redTeamFields[i][2].getText();
+                int id = Integer.parseInt(redTeamFields[i][0].getText()); // Player ID
+                String codename = redTeamFields[i][1].getText(); // Codename
+                String equipmentId = redTeamFields[i][2].getText(); // Equipment ID
                 Player redPlayer = new Player(id, codename);
                 redTeamPlayers.add(redPlayer);
-                equipmentMap.put(id, equipmentId); // Add equipment ID to the map
-                playerManager.insertPlayer(redPlayer);
-                
+                equipmentMap.put(id, equipmentId); // Player ID -> Equipment ID
+                equipmentIdToPlayerId.put(equipmentId, id); // Equipment ID -> Player ID
+                playerIdToPlayer.put(id, redPlayer);
             }
         }
-        JDialog dialog = new JDialog(frame, "ERROR SUBMITTING PLAYERS", true);
 
         if (greenTeamPlayers.isEmpty() && redTeamPlayers.isEmpty()) {
-            JOptionPane.showMessageDialog(dialog, "Players empty!", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "Players empty!", "Error", JOptionPane.ERROR_MESSAGE);
         } else {
-            PlayActionScreen playActionScreen = new PlayActionScreen(greenTeamPlayers, redTeamPlayers, equipmentMap, pss);
+            PlayActionScreen playActionScreen = new PlayActionScreen(
+                    greenTeamPlayers, redTeamPlayers, equipmentMap, equipmentIdToPlayerId, playerIdToPlayer, pss);
             playActionScreen.display();
         }
+        System.out.println("Equipment Map Contents:");
+        equipmentMap.forEach((key, value) ->
+                System.out.println("Player ID: " + key + ", Equipment ID: " + value)
+        );
+        playerIdToPlayer.forEach((id, player) ->
+                System.out.println("Player ID: " + id + ", Codename: " + player.getCodeName())
+        );
     }
-
 }
