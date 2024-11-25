@@ -165,7 +165,7 @@ public class PlayActionScreen {
 
 		for (Player player : players) {
 			JLabel playerLabel = new JLabel(
-					"ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: 0");
+					"ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: " + player.getScore());
 			playerLabel.setForeground(LIGHT_TEXT);
 			playerLabel.setFont(new Font("Arial", Font.PLAIN, 12));
 			playerListPanel.add(playerLabel);
@@ -413,19 +413,46 @@ public class PlayActionScreen {
 	}
 
 	private void updatePlayerPanels() {
+		//Sort the green team in descending order
+		greenTeamPlayers.sort((p1, p2) -> playerScores.get(p2.getId()) - playerScores.get(p1.getId()));
 		for (int i = 0; i < greenTeamPlayers.size(); i++) {
 			Player player = greenTeamPlayers.get(i);
 			int score = playerScores.get(player.getId());
 			JLabel playerLabel = (JLabel) greenTeamPlayerListPanel.getComponent(i);
 			playerLabel.setText("ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: " + score);
+			
+			//Fancy flashing name for the top score
+			if (i == 0) {
+				nameFlashEffect(playerLabel);
+			}
 		}
+		//Sort the red team in descending order
+		redTeamPlayers.sort((p1, p2) -> playerScores.get(p2.getId()) - playerScores.get(p1.getId()));
 		for (int i = 0; i < redTeamPlayers.size(); i++) {
 			Player player = redTeamPlayers.get(i);
 			int score = playerScores.get(player.getId());
 			JLabel playerLabel = (JLabel) redTeamPlayerListPanel.getComponent(i);
 			playerLabel.setText("ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: " + score);
+			if(i == 0) {
+				nameFlashEffect(playerLabel);
+			}
 		}
 	}
+	
+	private void nameFlashEffect(JLabel playerLabel) {
+    // Figure out what color the player label is currently
+    Color currentColor = playerLabel.getForeground();
+
+    Timer timer = new Timer(500, e -> {
+        // Toggle the color every 1/2 second
+        if (currentColor.equals(LIGHT_TEXT)) {
+            playerLabel.setForeground(Color.YELLOW);
+        } else {
+            playerLabel.setForeground(LIGHT_TEXT);
+        }
+    });
+    timer.start();
+}
 
 	private boolean isNumeric(String str) {
 		if (str == null || str.isEmpty()) {
