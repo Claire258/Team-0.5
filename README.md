@@ -103,7 +103,7 @@ This section further clarifies player entry screen mechanics, including how to a
 
 ---
 # Trouble Shooting
-- If the program does not compile, stating that **'void <init>()' not found**, please delete all class files currently in the program. After deleting files, navigate to the src folder in the terminal
+- If the program does not compile, stating that **'void <init>()' not found** or errors relating to **missing class loader files**, please delete all class files currently in the program. After deleting files, navigate to the src folder in the terminal within the cloned repository.
   ```bash
   cd
   cd Team-0.5/src
