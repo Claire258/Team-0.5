@@ -44,6 +44,8 @@
 
 ## Install Git LFS
 
+SKIP: No more need for Git LFS, since files come compressed already***
+
 1. Install Git LFS:
    For macOS:
    ```bash
