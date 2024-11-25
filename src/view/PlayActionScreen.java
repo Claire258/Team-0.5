@@ -283,22 +283,45 @@ public class PlayActionScreen {
 						String[] parts = receivedData.split(":");
 
 						if (parts[1].trim().equals("53")) {
-							greenTeamScore += 100;
+							 String transmitterEquipmentId = parts[0].trim();
+					int playerTransmitting = equipmentIdToPlayerId.get(transmitterEquipmentId);
+					Player baseHitter = playerIdToPlayer.get(playerTransmitting);
+        
+					// Adjust individual player's score and toggle base hit status
+					playerScores.put(playerTransmitting, playerScores.get(playerTransmitting) + 100);
+					baseHitter.setBaseHit(true);
+
+					logAction(baseHitter.getCodeName() + " hit Red base and earned 100 points!");
+					continue;
+							
+							/*greenTeamScore += 100;
 							updateTeamScores();
 							greenTeamPlayers.forEach(player ->
 									playerScores.put(player.getId(), playerScores.getOrDefault(player.getId(), 0) + 100)
 							);
 							logAction("Green Team scores 100 points! Red base hit.");
-							continue;
+							continue;*/
 
 						} else if (parts[1].trim().equals("43")) {
-							redTeamScore += 100;
+							 String transmitterEquipmentId = parts[0].trim();
+						int playerTransmitting = equipmentIdToPlayerId.get(transmitterEquipmentId);
+						Player baseHitter = playerIdToPlayer.get(playerTransmitting);
+
+						// Adjust individual player's score and toggle base hit status
+						playerScores.put(playerTransmitting, playerScores.get(playerTransmitting) + 100);
+						baseHitter.setBaseHit(true);
+
+						logAction(baseHitter.getCodeName() + " hit Green base and earned 100 points!");
+						continue;
+							
+							/*redTeamScore += 100;
 							updateTeamScores();
 							redTeamPlayers.forEach(player ->
 									playerScores.put(player.getId(), playerScores.getOrDefault(player.getId(), 0) + 100)
 							);
+							
 							logAction("Red Team scores 100 points! Green base hit.");
-							continue;
+							continue;*/
 						}
 						if (parts.length == 2) {
 							String transmitterEquipmentId = parts[0].trim();
@@ -447,17 +470,64 @@ public class PlayActionScreen {
 
 	private void updatePlayerPanels() {
 		for (int i = 0; i < greenTeamPlayers.size(); i++) {
+			greenTeamPlayers.sort((p1,p2) -> playerScores.get(p2.getId()) - playerScores.get(p1.getId()));
 			Player player = greenTeamPlayers.get(i);
 			int score = playerScores.get(player.getId());
 			JLabel playerLabel = (JLabel) greenTeamPlayerListPanel.getComponent(i);
-			playerLabel.setText("ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: " + score);
+			
+			String prefix = player.getBaseHit() ? "<span style='color:#FF69B4;font-style:italic;font-size:1.5em;'>B</span> " : "";
+
+			playerLabel.setText(
+				"<html>" + 
+				prefix + 
+				"ID: " + player.getId() + 
+				" | Codename: " + player.getCodeName() + 
+				" | Score: " + score + 
+				"</html>"
+			);
+			//playerLabel.setText("ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: " + score);
+			
+			if (i == 0)
+			{
+				nameFlashEffect(playerLabel);
+			}
 		}
 		for (int i = 0; i < redTeamPlayers.size(); i++) {
+			redTeamPlayers.sort((p1,p2) -> playerScores.get(p2.getId()) - playerScores.get(p1.getId()));
 			Player player = redTeamPlayers.get(i);
 			int score = playerScores.get(player.getId());
 			JLabel playerLabel = (JLabel) redTeamPlayerListPanel.getComponent(i);
-			playerLabel.setText("ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: " + score);
+			
+			String prefix = player.getBaseHit() ? "<span style='color:#FF69B4;font-style:italic;font-size:1.5em;'>B</span> " : "";
+
+
+			playerLabel.setText(
+				"<html>" + 
+				prefix + 
+				"ID: " + player.getId() + 
+				" | Codename: " + player.getCodeName() + 
+				" | Score: " + score + 
+				"</html>"
+			);
+			//playerLabel.setText("ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: " + score);
+			if (i == 0)
+			{
+				nameFlashEffect(playerLabel);
+			}
 		}
+	}
+	private void nameFlashEffect(JLabel playerLabel) {
+		//Color currentColor = playerLabel.getForeground();
+		Timer timer = new Timer(200, e -> {
+			if (playerLabel.getForeground().equals(LIGHT_TEXT)) {
+				playerLabel.setForeground(Color.YELLOW);
+			}
+			else {
+				playerLabel.setForeground(LIGHT_TEXT);
+			}
+		});
+		timer.setRepeats(true);
+		timer.start();
 	}
 
 	private boolean isNumeric(String str) {
@@ -478,7 +548,7 @@ public class PlayActionScreen {
 		SimpleAttributeSet center = new SimpleAttributeSet();
 		StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
 		StyleConstants.setFontSize(center, 14);
-		StyleConstants.setForeground(center, Color.BLUE);
+		StyleConstants.setForeground(center, LIGHT_TEXT);
 
 		try {
 			doc.insertString(doc.getLength(), action + "\n", null);
