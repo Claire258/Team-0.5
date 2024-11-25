@@ -278,7 +278,6 @@ public class PlayActionScreen {
 					}
 
 					lastProcessedData = receivedData;
-					System.out.println("Received data: " + lastProcessedData);
 
 					if (receivedData.contains(":")) {
 						String[] parts = receivedData.split(":");
@@ -295,13 +294,6 @@ public class PlayActionScreen {
 					logAction(baseHitter.getCodeName() + " hit Red base and earned 100 points!");
 					continue;
 							
-							/*greenTeamScore += 100;
-							updateTeamScores();
-							greenTeamPlayers.forEach(player ->
-									playerScores.put(player.getId(), playerScores.getOrDefault(player.getId(), 0) + 100)
-							);
-							logAction("Green Team scores 100 points! Red base hit.");
-							continue;*/
 
 						} else if (parts[1].trim().equals("43")) {
 							 String transmitterEquipmentId = parts[0].trim();
@@ -315,14 +307,6 @@ public class PlayActionScreen {
 						logAction(baseHitter.getCodeName() + " hit Green base and earned 100 points!");
 						continue;
 							
-							/*redTeamScore += 100;
-							updateTeamScores();
-							redTeamPlayers.forEach(player ->
-									playerScores.put(player.getId(), playerScores.getOrDefault(player.getId(), 0) + 100)
-							);
-							
-							logAction("Red Team scores 100 points! Green base hit.");
-							continue;*/
 						}
 						if (parts.length == 2) {
 							String transmitterEquipmentId = parts[0].trim();
@@ -486,7 +470,6 @@ public class PlayActionScreen {
 				" | Score: " + score + 
 				"</html>"
 			);
-			//playerLabel.setText("ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: " + score);
 			
 			if (i == 0)
 			{
@@ -510,7 +493,6 @@ public class PlayActionScreen {
 				" | Score: " + score + 
 				"</html>"
 			);
-			//playerLabel.setText("ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: " + score);
 			if (i == 0)
 			{
 				nameFlashEffect(playerLabel);
