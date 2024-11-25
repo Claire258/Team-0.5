@@ -398,7 +398,8 @@ public class PlayerEntryScreen {
         PlayerManager playerManager = new PlayerManager();
         List<Player> greenTeamPlayers = new ArrayList<>();
         List<Player> redTeamPlayers = new ArrayList<>();
-        Map<Integer, String> equipmentMap = new HashMap<>(); // Map to store equipment IDs
+        Map<Integer, String> equipmentMap = new HashMap<>(); // Player ID -> Equipment ID
+        Map<Integer, Player> playerIdToPlayer = new HashMap<>(); // Player ID -> Player object
 
         for (int i = 0; i < NUM_PLAYERS; i++) {
             if (!greenTeamFields[i][0].getText().isEmpty()) {
@@ -407,11 +408,9 @@ public class PlayerEntryScreen {
                 String equipmentId = greenTeamFields[i][2].getText();
                 Player greenPlayer = new Player(id, codename);
                 greenTeamPlayers.add(greenPlayer);
-                equipmentMap.put(id, equipmentId); // Add equipment ID to the map
+                equipmentMap.put(id, equipmentId);
+                playerIdToPlayer.put(id, greenPlayer); // Map Player ID to Player
                 playerManager.insertPlayer(greenPlayer);
-                
-                //Let the UDP know what the hardware codes are
-                //assignCodeAndSendUDP(equipmentId);
             }
             if (!redTeamFields[i][0].getText().isEmpty()) {
                 int id = Integer.parseInt(redTeamFields[i][0].getText());
@@ -419,17 +418,17 @@ public class PlayerEntryScreen {
                 String equipmentId = redTeamFields[i][2].getText();
                 Player redPlayer = new Player(id, codename);
                 redTeamPlayers.add(redPlayer);
-                equipmentMap.put(id, equipmentId); // Add equipment ID to the map
+                equipmentMap.put(id, equipmentId);
+                playerIdToPlayer.put(id, redPlayer); // Map Player ID to Player
                 playerManager.insertPlayer(redPlayer);
-                
             }
         }
-        JDialog dialog = new JDialog(frame, "ERROR SUBMITTING PLAYERS", true);
 
         if (greenTeamPlayers.isEmpty() && redTeamPlayers.isEmpty()) {
-            JOptionPane.showMessageDialog(dialog, "Players empty!", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "Players empty!", "Error", JOptionPane.ERROR_MESSAGE);
         } else {
-            PlayActionScreen playActionScreen = new PlayActionScreen(greenTeamPlayers, redTeamPlayers, equipmentMap, pss);
+            PlayActionScreen playActionScreen = new PlayActionScreen(
+                    greenTeamPlayers, redTeamPlayers, equipmentMap, playerIdToPlayer, pss);
             playActionScreen.display();
         }
     }
