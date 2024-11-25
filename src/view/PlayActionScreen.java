@@ -12,6 +12,10 @@ import java.util.Random;
 import javax.swing.JLabel;
 
 import javax.sound.sampled.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import java.io.File;
 import java.io.IOException;
 
@@ -42,9 +46,10 @@ public class PlayActionScreen {
 	private int greenTeamScore = 0;
 	private int redTeamScore = 0;
 
-	private JTextArea actionLogArea;
+	JTextPane actionLogArea = new JTextPane();
 
-    private PhotonClient pss;
+
+	private PhotonClient pss;
 	private Clip musicClip;
 
 	public PlayActionScreen(List<Player> greenTeamPlayers, List<Player> redTeamPlayers, Map<Integer, String> equipmentMap,
@@ -111,8 +116,7 @@ public class PlayActionScreen {
 		updateTeamScores();
 		startCountdownTimer();
 	}
-	
-	//Find total score for all players on a team
+
 	    public int scoreTotal(List<Player> team)
     {
 		int totalScore = 0;
@@ -135,7 +139,7 @@ public class PlayActionScreen {
 		titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 		actionLogPanel.add(titleLabel, BorderLayout.NORTH);
 
-		actionLogArea = new JTextArea();
+		actionLogArea = new JTextPane();
 		actionLogArea.setEditable(false);
 		actionLogArea.setBackground(DARK_BACKGROUND);
 		actionLogArea.setForeground(LIGHT_TEXT);
@@ -252,8 +256,6 @@ public class PlayActionScreen {
 	}
 
 	private void startGame() {
-		System.out.println("Game started!");
-		logAction("Game started!");
 
 		try {
 			pss.sendStartSignal();
@@ -275,36 +277,32 @@ public class PlayActionScreen {
 					}
 
 					lastProcessedData = receivedData;
+					System.out.println("Received data: " + lastProcessedData);
 
-					if (receivedData.equals("53")) {
-						greenTeamScore += 100;
-						updateTeamScores();
-						greenTeamPlayers.forEach(player ->
-								playerScores.put(player.getId(), playerScores.getOrDefault(player.getId(), 0) + 100)
-						);
-						logAction("Green Team scores 100 points! Red base hit.");
-
-					} else if (receivedData.equals("43")) {
-						redTeamScore += 100;
-						updateTeamScores();
-						redTeamPlayers.forEach(player ->
-								playerScores.put(player.getId(), playerScores.getOrDefault(player.getId(), 0) + 100)
-						);
-						logAction("Red Team scores 100 points! Green base hit.");
-					} else if (receivedData.contains(":")) {
+					if (receivedData.contains(":")) {
 						String[] parts = receivedData.split(":");
+
+						if (parts[1].trim().equals("53")) {
+							greenTeamScore += 100;
+							updateTeamScores();
+							greenTeamPlayers.forEach(player ->
+									playerScores.put(player.getId(), playerScores.getOrDefault(player.getId(), 0) + 100)
+							);
+							logAction("Green Team scores 100 points! Red base hit.");
+							continue;
+
+						} else if (parts[1].trim().equals("43")) {
+							redTeamScore += 100;
+							updateTeamScores();
+							redTeamPlayers.forEach(player ->
+									playerScores.put(player.getId(), playerScores.getOrDefault(player.getId(), 0) + 100)
+							);
+							logAction("Red Team scores 100 points! Green base hit.");
+							continue;
+						}
 						if (parts.length == 2) {
 							String transmitterEquipmentId = parts[0].trim();
 							String hitEquipmentId = parts[1].trim();
-
-//							if (!equipmentIdToPlayerId.containsKey(transmitterEquipmentId)) {
-//								logAction("Error: Transmitting equipment ID not found: " + transmitterEquipmentId);
-//								continue;
-//							}
-//							if (!equipmentIdToPlayerId.containsKey(hitEquipmentId)) {
-//								logAction("Error: Hit equipment ID not found: " + hitEquipmentId);
-//								continue;
-//							}
 
 							int playerTransmitting = equipmentIdToPlayerId.get(transmitterEquipmentId);
 							int playerHit = equipmentIdToPlayerId.get(hitEquipmentId);
@@ -475,7 +473,22 @@ public class PlayActionScreen {
 	}
 
 	private void logAction(String action) {
-		actionLogArea.append(action + "\n");
+		StyledDocument doc = actionLogArea.getStyledDocument();
+
+		SimpleAttributeSet center = new SimpleAttributeSet();
+		StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
+		StyleConstants.setFontSize(center, 14);
+		StyleConstants.setForeground(center, Color.BLUE);
+
+		try {
+			doc.insertString(doc.getLength(), action + "\n", null);
+
+			doc.setParagraphAttributes(doc.getLength(), 1, center, false);
+		} catch (BadLocationException e) {
+			e.printStackTrace();
+		}
+
 		actionLogArea.setCaretPosition(actionLogArea.getDocument().getLength());
 	}
+
 }
