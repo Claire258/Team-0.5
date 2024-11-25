@@ -283,22 +283,45 @@ public class PlayActionScreen {
 						String[] parts = receivedData.split(":");
 
 						if (parts[1].trim().equals("53")) {
-							greenTeamScore += 100;
+							 String transmitterEquipmentId = parts[0].trim();
+					int playerTransmitting = equipmentIdToPlayerId.get(transmitterEquipmentId);
+					Player baseHitter = playerIdToPlayer.get(playerTransmitting);
+        
+					// Adjust individual player's score and toggle base hit status
+					playerScores.put(playerTransmitting, playerScores.get(playerTransmitting) + 100);
+					baseHitter.setBaseHit(true);
+
+					logAction(baseHitter.getCodeName() + " hit Red base and earned 100 points!");
+					continue;
+							
+							/*greenTeamScore += 100;
 							updateTeamScores();
 							greenTeamPlayers.forEach(player ->
 									playerScores.put(player.getId(), playerScores.getOrDefault(player.getId(), 0) + 100)
 							);
 							logAction("Green Team scores 100 points! Red base hit.");
-							continue;
+							continue;*/
 
 						} else if (parts[1].trim().equals("43")) {
-							redTeamScore += 100;
+							 String transmitterEquipmentId = parts[0].trim();
+						int playerTransmitting = equipmentIdToPlayerId.get(transmitterEquipmentId);
+						Player baseHitter = playerIdToPlayer.get(playerTransmitting);
+
+						// Adjust individual player's score and toggle base hit status
+						playerScores.put(playerTransmitting, playerScores.get(playerTransmitting) + 100);
+						baseHitter.setBaseHit(true);
+
+						logAction(baseHitter.getCodeName() + " hit Green base and earned 100 points!");
+						continue;
+							
+							/*redTeamScore += 100;
 							updateTeamScores();
 							redTeamPlayers.forEach(player ->
 									playerScores.put(player.getId(), playerScores.getOrDefault(player.getId(), 0) + 100)
 							);
+							
 							logAction("Red Team scores 100 points! Green base hit.");
-							continue;
+							continue;*/
 						}
 						if (parts.length == 2) {
 							String transmitterEquipmentId = parts[0].trim();
@@ -451,7 +474,18 @@ public class PlayActionScreen {
 			Player player = greenTeamPlayers.get(i);
 			int score = playerScores.get(player.getId());
 			JLabel playerLabel = (JLabel) greenTeamPlayerListPanel.getComponent(i);
-			playerLabel.setText("ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: " + score);
+			
+			String prefix = player.getBaseHit() ? "<span style='color:#FF69B4;font-style:italic;font-size:1.5em;'>B</span> " : "";
+
+			playerLabel.setText(
+				"<html>" + 
+				prefix + 
+				"ID: " + player.getId() + 
+				" | Codename: " + player.getCodeName() + 
+				" | Score: " + score + 
+				"</html>"
+			);
+			//playerLabel.setText("ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: " + score);
 			
 			if (i == 0)
 			{
@@ -463,7 +497,19 @@ public class PlayActionScreen {
 			Player player = redTeamPlayers.get(i);
 			int score = playerScores.get(player.getId());
 			JLabel playerLabel = (JLabel) redTeamPlayerListPanel.getComponent(i);
-			playerLabel.setText("ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: " + score);
+			
+			String prefix = player.getBaseHit() ? "<span style='color:#FF69B4;font-style:italic;font-size:1.5em;'>B</span> " : "";
+
+
+			playerLabel.setText(
+				"<html>" + 
+				prefix + 
+				"ID: " + player.getId() + 
+				" | Codename: " + player.getCodeName() + 
+				" | Score: " + score + 
+				"</html>"
+			);
+			//playerLabel.setText("ID: " + player.getId() + " | Codename: " + player.getCodeName() + " | Score: " + score);
 			if (i == 0)
 			{
 				nameFlashEffect(playerLabel);
