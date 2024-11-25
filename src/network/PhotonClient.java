@@ -34,7 +34,7 @@ public class PhotonClient {
 	}
 	
 	public void sendStartSignal() throws IOException {
-		System.out.println("Sending signal 202 to " + serverAddress + " : " + OUT_PORT);
+		//System.out.println("Sending signal 202 to " + serverAddress + " : " + OUT_PORT);
 		sendBroadcast("202");
 	}
 	
@@ -67,7 +67,7 @@ public class PhotonClient {
 		//See if it's time to end the game (send 3 times)
 		if(data.equals("221")) {
 			terminationSigCount++;
-			System.out.println("Termination signal count: " + terminationSigCount);
+			//System.out.println("Termination signal count: " + terminationSigCount);
 		} else if (data.contains(":")) {
 			String [] parts = data.split(":");
 			int playerTransmitting = Integer.parseInt(parts[0]);
@@ -84,7 +84,7 @@ public class PhotonClient {
 		byte [] data = message.getBytes();
 		DatagramPacket packet = new DatagramPacket(data, data.length, serverAddress, OUT_PORT);
 		sendSocket.send(packet);
-		System.out.println("Broadcasted message: " + message);
+		//System.out.println("Broadcasted message: " + message);
 	}
 	
 	public void run()
