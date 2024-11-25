@@ -40,6 +40,8 @@ public class PhotonClient {
 	
 	public void sendEndSignal() throws IOException {
 		sendBroadcast("221");
+		sendBroadcast("221");
+		sendBroadcast("221");
 	}
 	
 	public void listenAndProcess() {
