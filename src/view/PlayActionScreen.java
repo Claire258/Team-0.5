@@ -370,18 +370,20 @@ public class PlayActionScreen {
 	private void endGame() {
 		try {
 			pss.sendEndSignal();
+			pss.sendEndSignal();
+			pss.sendEndSignal();
 			logAction("Game ending");
+			greenTeamPlayers.clear();
+			redTeamPlayers.clear();
+
+			stopMusic();
+		
+			SwingUtilities.invokeLater(this::showEndGamePopup);
 		}
 		catch (IOException e) {
 			System.err.println("Error sending end signal: " + e.getMessage());
 			e.printStackTrace();
 		}
-		greenTeamPlayers.clear();
-		redTeamPlayers.clear();
-
-		stopMusic();
-		
-		SwingUtilities.invokeLater(this::showEndGamePopup);
 	}
 	
 	private void showEndGamePopup() {
