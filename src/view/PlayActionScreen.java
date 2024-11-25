@@ -34,6 +34,7 @@ public class PlayActionScreen {
 	private Map<Integer, String> equipmentMap;
 	private Map<Integer, Player> playerIdToPlayer;
 	private Map<Integer, Integer> playerScores;
+	private Map<String, Integer> equipmentIdToPlayerId;
 
 	private JPanel greenTeamPlayerListPanel;
 	private JPanel redTeamPlayerListPanel;
@@ -46,13 +47,15 @@ public class PlayActionScreen {
     private PhotonClient pss;
 	private Clip musicClip;
 
-	public PlayActionScreen(List<Player> greenTeamPlayers, List<Player> redTeamPlayers, Map<Integer, String> equipmentMap, Map<Integer, Player> playerIdToPlayer, PhotonClient pss) {
+	public PlayActionScreen(List<Player> greenTeamPlayers, List<Player> redTeamPlayers, Map<Integer, String> equipmentMap,
+							Map<String, Integer> equipmentIdToPlayerId ,Map<Integer, Player> playerIdToPlayer, PhotonClient pss) {
 		this.greenTeamPlayers = greenTeamPlayers;
 		this.redTeamPlayers = redTeamPlayers;
 		this.equipmentMap = equipmentMap;
-		this.playerIdToPlayer = new HashMap<>();
+		this.playerIdToPlayer = playerIdToPlayer;
 		this.pss = pss;
 		this.playerScores = new HashMap<>();
+		this.equipmentIdToPlayerId = equipmentIdToPlayerId;
 		for (Player player : greenTeamPlayers) {
 			playerScores.put(player.getId(), 0);
 		}
@@ -212,12 +215,6 @@ public class PlayActionScreen {
 	}
 	private void startGameTimer()
 	{
-		try {
-					pss.sendStartSignal();
-					System.out.println("Successfully broadcasted signal 202");
-				} catch (IOException e){
-					System.err.println("Failed to send signal to start game");
-				}
 		Timer gameTimer = new Timer(1000, e-> {
 			if(this.gameTimer > 0){
 				this.gameTimer--;
@@ -255,7 +252,7 @@ public class PlayActionScreen {
 	}
 
 	private void startGame() {
-
+		System.out.println("Game started!");
 		logAction("Game started!");
 
 		try {
@@ -273,7 +270,7 @@ public class PlayActionScreen {
 					String receivedData = pss.getReceivedData();
 
 					if (receivedData == null || receivedData.isEmpty() || receivedData.equals(lastProcessedData)) {
-						Thread.sleep(100); // Avoid busy waiting
+						Thread.sleep(100);
 						continue;
 					}
 
@@ -282,42 +279,59 @@ public class PlayActionScreen {
 					if (receivedData.equals("53")) {
 						greenTeamScore += 100;
 						updateTeamScores();
+						greenTeamPlayers.forEach(player ->
+								playerScores.put(player.getId(), playerScores.getOrDefault(player.getId(), 0) + 100)
+						);
 						logAction("Green Team scores 100 points! Red base hit.");
+
 					} else if (receivedData.equals("43")) {
 						redTeamScore += 100;
 						updateTeamScores();
+						redTeamPlayers.forEach(player ->
+								playerScores.put(player.getId(), playerScores.getOrDefault(player.getId(), 0) + 100)
+						);
 						logAction("Red Team scores 100 points! Green base hit.");
 					} else if (receivedData.contains(":")) {
 						String[] parts = receivedData.split(":");
 						if (parts.length == 2) {
-							int playerTransmitting = Integer.parseInt(parts[0].trim());
-							int playerHit = Integer.parseInt(parts[1].trim());
+							String transmitterEquipmentId = parts[0].trim();
+							String hitEquipmentId = parts[1].trim();
 
-
-//							if (!playerIdToPlayer.containsKey(playerTransmitting)) {
-//								logAction("Error: Transmitting player ID not found: " + playerTransmitting);
+//							if (!equipmentIdToPlayerId.containsKey(transmitterEquipmentId)) {
+//								logAction("Error: Transmitting equipment ID not found: " + transmitterEquipmentId);
 //								continue;
 //							}
-//							if (!playerIdToPlayer.containsKey(playerHit)) {
-//								logAction("Error: Hit player ID not found: " + playerHit);
+//							if (!equipmentIdToPlayerId.containsKey(hitEquipmentId)) {
+//								logAction("Error: Hit equipment ID not found: " + hitEquipmentId);
 //								continue;
 //							}
-							String transmitterEquipment = equipmentMap.get(playerTransmitting);
-							String hitEquipment = equipmentMap.get(playerHit);
 
-							String transmitterCodename = playerIdToPlayer.get(playerTransmitting).getCodeName();
-							String hitCodename = playerIdToPlayer.get(playerHit).getCodeName();
+							int playerTransmitting = equipmentIdToPlayerId.get(transmitterEquipmentId);
+							int playerHit = equipmentIdToPlayerId.get(hitEquipmentId);
+
+							Player player1 = playerIdToPlayer.get(playerTransmitting);
+							Player player2 = playerIdToPlayer.get(playerHit);
+
+							String transmitterCodename = player1.getCodeName();
+							String hitCodename = player2.getCodeName();
+
+							playerScores.put(playerTransmitting,
+									playerScores.getOrDefault(playerTransmitting, 0) + 10);
+							playerScores.put(playerHit,
+									playerScores.getOrDefault(playerHit, 0) - 10);
+
 
 							if (isSameTeam(playerTransmitting, playerHit)) {
 								logAction("Team tag: " + transmitterCodename +
-										" (Equipment ID: " + transmitterEquipment + ") hit their teammate " +
-										hitCodename + " (Equipment ID: " + hitEquipment + ").");
-								pss.sendEquipmentId(Integer.parseInt(transmitterEquipment));
+										  " hit their teammate " + hitCodename);
+								pss.sendEquipmentId(Integer.parseInt(transmitterEquipmentId));
 							} else {
-								logAction(transmitterCodename + " (Equipment ID: " + transmitterEquipment + ")" +
-										" hit " + hitCodename + " (Equipment ID: " + hitEquipment + ").");
-								pss.sendEquipmentId(Integer.parseInt(hitEquipment));
+								logAction(transmitterCodename +
+										" hit " + hitCodename);
+								pss.sendEquipmentId(Integer.parseInt(hitEquipmentId));
 							}
+							updateTeamScores();
+							updatePlayerPanels();
 						} else {
 							logAction("Error: Malformed data received: " + receivedData);
 						}
@@ -329,22 +343,22 @@ public class PlayActionScreen {
 		}).start();
 	}
 
+	private boolean isSameTeam(int player1Id, int player2Id) {
+		try {
 
+			boolean inGreenTeam = greenTeamPlayers.stream().anyMatch(player -> player.getId() == player1Id) &&
+					greenTeamPlayers.stream().anyMatch(player -> player.getId() == player2Id);
 
-	/**
-	 * Checks if both players are in the same team.
-	 *
-	 * @param player1 ID of the first player
-	 * @param player2 ID of the second player
-	 * @return true if both players are in the same team, otherwise false
-	 */
-	private boolean isSameTeam(int player1, int player2) {
-		boolean inGreenTeam = greenTeamPlayers.stream().anyMatch(player -> player.getId() == player1) &&
-				greenTeamPlayers.stream().anyMatch(player -> player.getId() == player2);
-		boolean inRedTeam = redTeamPlayers.stream().anyMatch(player -> player.getId() == player1) &&
-				redTeamPlayers.stream().anyMatch(player -> player.getId() == player2);
-		return inGreenTeam || inRedTeam;
+			boolean inRedTeam = redTeamPlayers.stream().anyMatch(player -> player.getId() == player1Id) &&
+					redTeamPlayers.stream().anyMatch(player -> player.getId() == player2Id);
+
+			return inGreenTeam || inRedTeam;
+		} catch (NumberFormatException e) {
+			System.err.println("Error: Invalid player ID format. Player1: " + player1Id + ", Player2: " + player2Id);
+			return false;
+		}
 	}
+
 
 
 	private void endGame() {
@@ -365,7 +379,6 @@ public class PlayActionScreen {
 	}
 	
 	private void showEndGamePopup() {
-    // Figure out who won
     String winningTeam;
     if (greenTeamScore > redTeamScore) {
         winningTeam = "Green Team wins with a score of " + greenTeamScore + "!";
@@ -375,31 +388,28 @@ public class PlayActionScreen {
         winningTeam = "It's a tie! Both teams scored " + greenTeamScore + "!";
     }
 
-    // Make the window
     JFrame popupFrame = new JFrame("Game Over");
     popupFrame.setSize(400, 200);
     popupFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     popupFrame.setLayout(new BorderLayout());
 
-    // Add a label to display the winner
     JLabel winnerLabel = new JLabel(winningTeam, SwingConstants.CENTER);
     winnerLabel.setFont(new Font("Arial", Font.BOLD, 16));
     winnerLabel.setForeground(Color.BLACK);
     popupFrame.add(winnerLabel, BorderLayout.CENTER);
 
-    // Add buttons for "End Program" and "Return to Player Entry Screen"
     JPanel buttonPanel = new JPanel(new FlowLayout());
     JButton endProgramButton = new JButton("End Program");
     JButton returnToEntryButton = new JButton("Return to Player Entry");
 
     endProgramButton.addActionListener(e -> {
-        System.exit(0); // Exit the program
+        System.exit(0);
     });
 
     returnToEntryButton.addActionListener(e -> {
-        popupFrame.dispose(); // Close the popup
+        popupFrame.dispose();
         SwingUtilities.invokeLater(() -> {
-            new PlayerEntryScreen(pss).display(); // Return to player entry screen
+            new PlayerEntryScreen(pss).display();
         });
     });
 
@@ -407,7 +417,6 @@ public class PlayActionScreen {
     buttonPanel.add(returnToEntryButton);
     popupFrame.add(buttonPanel, BorderLayout.SOUTH);
 
-    // Center the popup and make it visible
     popupFrame.setLocationRelativeTo(null);
     popupFrame.setVisible(true);
 }
