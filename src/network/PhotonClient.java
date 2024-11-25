@@ -5,7 +5,6 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 
 public class PhotonClient {
-	//System.out.println("Client called");
 
     private static final int IN_PORT = 7501;  // Port the server listens on
     private static final int OUT_PORT = 7500; // Port the client uses to send data
@@ -34,14 +33,15 @@ public class PhotonClient {
 	}
 	
 	public void sendStartSignal() throws IOException {
-		//System.out.println("Sending signal 202 to " + serverAddress + " : " + OUT_PORT);
 		sendBroadcast("202");
 	}
 	
 	public void sendEndSignal() throws IOException {
 		sendBroadcast("221");
-		sendBroadcast("221");
-		sendBroadcast("221");
+		terminationSigCount++;
+		if(terminationSigCount >= 3){
+			stop();
+		}
 	}
 	
 	public void listenAndProcess() {
@@ -53,13 +53,13 @@ public class PhotonClient {
 				String data = new String(packet.getData(), 0, packet.getLength());
 				processReceivedData(data);
 			} catch (IOException e) {
-				System.err.println("Error receiving packet: " + e.getMessage());
 			}
 		}
-		//Close the socket when you're done
+		
+	}
+	public void stop() {
 		sendSocket.close();
 		receiveSocket.close();
-		
 	}
 	
 	private void processReceivedData(String data) throws IOException {
@@ -67,7 +67,6 @@ public class PhotonClient {
 		//See if it's time to end the game (send 3 times)
 		if(data.equals("221")) {
 			terminationSigCount++;
-			//System.out.println("Termination signal count: " + terminationSigCount);
 		} else if (data.contains(":")) {
 			String [] parts = data.split(":");
 			int playerTransmitting = Integer.parseInt(parts[0]);
@@ -84,7 +83,6 @@ public class PhotonClient {
 		byte [] data = message.getBytes();
 		DatagramPacket packet = new DatagramPacket(data, data.length, serverAddress, OUT_PORT);
 		sendSocket.send(packet);
-		//System.out.println("Broadcasted message: " + message);
 	}
 	
 	public void run()
