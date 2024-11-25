@@ -13,6 +13,7 @@
 1. [How to Run the Application](#how-to-run-the-application)
 2. [Install Git LFS](#install-git-lfs)
 3. [Game Mechanics](#game-mechanics)
+4. [Trouble Shooting](#trouble-shooting)
 
 ## How to Run the Application
 
@@ -102,3 +103,19 @@ This section further clarifies player entry screen mechanics, including how to a
 - You can choose one of the following actions:
   - **End the program**, or
   - **Return to the player entry screen** to start a new game.
+
+---
+# Trouble Shooting
+- If the program does not compile, stating that **'void <init>()' not found**, please delete all class files currently in the program. After deleting files, navigate to the src folder in the terminal
+  ```bash
+  cd
+  cd Team-0.5/src
+- Compile Main.java
+  ```bash
+  javac Main.java
+- Navigate back to main folder of the program directory
+  ```bash
+  cd ..
+- Recompile the program with updated class files
+  ```bash
+  ./run.bash
