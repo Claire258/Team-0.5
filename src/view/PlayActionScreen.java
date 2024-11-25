@@ -517,15 +517,16 @@ public class PlayActionScreen {
 		}
 	}
 	private void nameFlashEffect(JLabel playerLabel) {
-		Color currentColor = playerLabel.getForeground();
+		//Color currentColor = playerLabel.getForeground();
 		Timer timer = new Timer(200, e -> {
-			if (currentColor.equals(LIGHT_TEXT)) {
+			if (playerLabel.getForeground().equals(LIGHT_TEXT)) {
 				playerLabel.setForeground(Color.YELLOW);
 			}
 			else {
 				playerLabel.setForeground(LIGHT_TEXT);
 			}
 		});
+		timer.setRepeats(true);
 		timer.start();
 	}
 
